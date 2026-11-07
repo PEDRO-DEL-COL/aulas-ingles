@@ -10,25 +10,27 @@
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
+import type { Database } from '@/types/database'
+
 const url = (import.meta.env.VITE_SUPABASE_URL ?? '').trim()
 const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY ?? '').trim()
 
 /** true quando VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY estão definidos. */
 export const isSupabaseConfigured = url !== '' && anonKey !== ''
 
-let client: SupabaseClient | undefined
+let client: SupabaseClient<Database> | undefined
 
 /**
  * Retorna o cliente Supabase (singleton).
  * Lança erro em pt-BR se as variáveis de ambiente não estiverem configuradas.
  */
-export function getSupabase(): SupabaseClient {
+export function getSupabase(): SupabaseClient<Database> {
   if (!isSupabaseConfigured) {
     throw new Error(
       'Supabase não configurado: defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no .env (veja .env.example).',
     )
   }
-  client ??= createClient(url, anonKey, {
+  client ??= createClient<Database>(url, anonKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
