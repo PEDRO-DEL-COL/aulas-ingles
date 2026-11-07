@@ -6,6 +6,18 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.7.0] - 2026-11-07
+
+### Adicionado
+
+- Área da professora (`/app/professora`): Hoje (aulas do dia, Meet, lembrete por WhatsApp, cobranças atrasadas e decisões de reposição), Agenda da semana (marcar realizada/falta, cancelar, agendar reposição, gerar aulas recorrentes), Alunos (busca e filtro), Ficha do aluno (dados, consentimento do responsável, horários fixos, responsáveis/pagador, anotações privadas, últimas aulas) e Registro da aula (presença, conteúdo, resumo, tarefa, anotação privada, materiais).
+- Utilitários testados: conversão de data/hora local para UTC e semana no fuso (só Intl), mensagem de lembrete, validação de e-mail, Meet e telefone, agrupamento por dia.
+- Tipos do banco para schedules, private_notes, payers, student_guardians, blocked_dates, leads e RPCs generate_lessons, decide_makeup e schedule_makeup.
+
+### Alterado
+
+- Utilitários compartilhados (datas, erros, relógio, estados de tela) movidos para `src/features/shared/`.
+
 ## [0.6.0] - 2026-11-07
 
 ### Adicionado
@@ -78,7 +90,8 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 - ESLint (type-aware), Prettier, Vitest e scripts `dev`, `build`, `lint`, `typecheck`, `test`, `format`.
 - `.env.example`, `_redirects` para SPA no Cloudflare Pages, README em pt-BR, `CLAUDE.md` e briefing do projeto.
 
-[Não publicado]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.6.0...HEAD
+[Não publicado]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.3.0...v0.4.0
