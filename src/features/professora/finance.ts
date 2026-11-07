@@ -317,3 +317,85 @@ export function buildPaymentReminder(p: {
     p.businessName
   )
 }
+
+// ------------------------------------------------------------------ lote mensal
+
+export type BatchAction =
+  'criar' | 'criada' | 'ja_existe' | 'sem_plano' | 'plano_inativo' | 'nao_mensal'
+
+/** Linha devolvida por generate_monthly_invoices. */
+export type BatchRow = {
+  student_id: string
+  student_name: string
+  plan_id: string | null
+  plan_name: string | null
+  amount_cents: number | null
+  reference_month: string
+  due_date: string
+  action: BatchAction
+  invoice_id: string | null
+}
+
+const BATCH_LABELS: Record<BatchAction, string> = {
+  criar: 'Será criada',
+  criada: 'Criada',
+  ja_existe: 'Já existe',
+  sem_plano: 'Sem plano',
+  plano_inativo: 'Plano inativo',
+  nao_mensal: 'Pacote/avulsa: não gera em lote',
+}
+
+export function batchActionLabel(action: BatchAction): string {
+  return BATCH_LABELS[action]
+}
+
+export type BatchSummary = {
+  counts: Record<BatchAction, number>
+  /** Quantas serão (prévia) ou foram (execução) criadas. */
+  toCreate: number
+  /** Soma, em centavos, das que serão/foram criadas. */
+  totalCents: number
+}
+
+export function summarizeBatch(rows: readonly BatchRow[]): BatchSummary {
+  const counts: Record<BatchAction, number> = {
+    criar: 0,
+    criada: 0,
+    ja_existe: 0,
+    sem_plano: 0,
+    plano_inativo: 0,
+    nao_mensal: 0,
+  }
+  let totalCents = 0
+  for (const r of rows) {
+    counts[r.action] += 1
+    if (r.action === 'criar' || r.action === 'criada') totalCents += r.amount_cents ?? 0
+  }
+  return { counts, toCreate: counts.criar + counts.criada, totalCents }
+}
+
+export type BatchFormValues = { month: string; dueDay: number | string }
+export type BatchFormErrors = Partial<Record<'month' | 'dueDay', string>>
+
+export function validateBatchForm(
+  v: BatchFormValues,
+): { data: { month: string; dueDay: number } } | { errors: BatchFormErrors } {
+  const errors: BatchFormErrors = {}
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(v.month))
+    errors.month = 'Informe o mês de referência.'
+  const raw = typeof v.dueDay === 'string' ? v.dueDay.trim() : v.dueDay
+  const day = typeof raw === 'string' ? (/^\d+$/.test(raw) ? Number(raw) : NaN) : raw
+  if (!Number.isInteger(day) || day < 1 || day > 31)
+    errors.dueDay = 'Informe um dia de vencimento de 1 a 31.'
+  if (Object.keys(errors).length > 0) return { errors }
+  return { data: { month: v.month, dueDay: day } }
+}
+
+/**
+ * Mês sugerido para gerar em lote: o SEGUINTE ao atual (fuso de Brasília),
+ * pois a professora costuma lançar as mensalidades antes de o mês começar.
+ */
+export function defaultBatchMonth(now: Date): string {
+  const [y, m] = currentMonthInput(now).split('-').map(Number) as [number, number]
+  return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`
+}

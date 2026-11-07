@@ -6,6 +6,7 @@ import { getSupabase } from '@/lib/supabase'
 import type { TablesUpdate } from '@/types/database'
 
 import type {
+  BatchRow,
   InvoiceAdmin,
   InvoiceInsert,
   InvoicePayer,
@@ -134,4 +135,40 @@ export async function listPlansForBilling(): Promise<PlanLite[]> {
     .order('name', { ascending: true })
   if (error) fail(error, 'Não foi possível carregar os planos.')
   return data
+}
+
+async function runBatch(
+  month: string,
+  dueDay: number,
+  dryRun: boolean,
+): Promise<BatchRow[]> {
+  const { data, error } = await getSupabase().rpc('generate_monthly_invoices', {
+    p_month: `${month}-01`,
+    p_due_day: dueDay,
+    p_dry_run: dryRun,
+  })
+  if (error)
+    fail(
+      error,
+      dryRun
+        ? 'Não foi possível gerar a prévia das mensalidades.'
+        : 'Não foi possível gerar as mensalidades.',
+    )
+  return data
+}
+
+/** Prévia (nada é gravado). `month` em AAAA-MM. */
+export function previewMonthlyInvoices(
+  month: string,
+  dueDay: number,
+): Promise<BatchRow[]> {
+  return runBatch(month, dueDay, true)
+}
+
+/** Cria as mensalidades do mês; idempotente. `month` em AAAA-MM. */
+export function generateMonthlyInvoices(
+  month: string,
+  dueDay: number,
+): Promise<BatchRow[]> {
+  return runBatch(month, dueDay, false)
 }

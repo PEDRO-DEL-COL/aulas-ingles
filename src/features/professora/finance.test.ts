@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  batchActionLabel,
   buildPaymentReminder,
+  defaultBatchMonth,
+  summarizeBatch,
+  validateBatchForm,
+  type BatchRow,
   filterInvoices,
   groupInvoices,
   invoiceDefaultsFromPlan,
@@ -217,5 +222,58 @@ describe('textos', () => {
     expect(m).toContain('10/11/2026')
     expect(m).toContain('área do aluno')
     expect(m).toContain('novembro de 2026')
+  })
+})
+
+describe('lote mensal', () => {
+  const row = (action: BatchRow['action'], cents: number | null): BatchRow => ({
+    student_id: 's',
+    student_name: 'A',
+    plan_id: null,
+    plan_name: null,
+    amount_cents: cents,
+    reference_month: '2026-12-01',
+    due_date: '2026-12-10',
+    action,
+    invoice_id: null,
+  })
+
+  it('rotula as ações', () => {
+    expect(batchActionLabel('criar')).toBe('Será criada')
+    expect(batchActionLabel('nao_mensal')).toBe('Pacote/avulsa: não gera em lote')
+  })
+
+  it('resume contagens e total', () => {
+    const s = summarizeBatch([
+      row('criar', 10000),
+      row('criar', 5000),
+      row('ja_existe', 9000),
+      row('sem_plano', null),
+    ])
+    expect(s.counts.criar).toBe(2)
+    expect(s.counts.ja_existe).toBe(1)
+    expect(s.toCreate).toBe(2)
+    expect(s.totalCents).toBe(15000)
+    expect(summarizeBatch([row('criada', 7000)]).totalCents).toBe(7000)
+  })
+
+  it('valida o formulário', () => {
+    expect(validateBatchForm({ month: '2026-12', dueDay: 10 })).toEqual({
+      data: { month: '2026-12', dueDay: 10 },
+    })
+    expect(validateBatchForm({ month: '2026-12', dueDay: '5' })).toEqual({
+      data: { month: '2026-12', dueDay: 5 },
+    })
+    expect('errors' in validateBatchForm({ month: '', dueDay: 10 })).toBe(true)
+    expect('errors' in validateBatchForm({ month: '2026-12', dueDay: 0 })).toBe(true)
+    expect('errors' in validateBatchForm({ month: '2026-12', dueDay: 32 })).toBe(true)
+    expect('errors' in validateBatchForm({ month: '2026-12', dueDay: '1.5' })).toBe(true)
+  })
+
+  it('sugere o mês seguinte em Brasília', () => {
+    expect(defaultBatchMonth(new Date('2026-11-07T12:00:00Z'))).toBe('2026-12')
+    expect(defaultBatchMonth(new Date('2026-12-15T12:00:00Z'))).toBe('2027-01')
+    // 01/12 00:30 UTC ainda é 30/11 em Brasília
+    expect(defaultBatchMonth(new Date('2026-12-01T00:30:00Z'))).toBe('2026-12')
   })
 })

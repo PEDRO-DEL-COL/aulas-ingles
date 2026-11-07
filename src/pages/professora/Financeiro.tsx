@@ -1,4 +1,4 @@
-import { Ban, MessageCircle, Plus, Undo2, CircleCheck } from 'lucide-react'
+import { Ban, CalendarPlus, MessageCircle, Plus, Undo2, CircleCheck } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router'
 
@@ -10,6 +10,7 @@ import { Input, Label, Select, Textarea } from '@/components/ui/field'
 import { InvoiceStatusBadge } from '@/features/aluno/components/StatusBadges'
 import { isPayable } from '@/features/aluno/invoices'
 import { ConfirmDialog } from '@/features/professora/components/ConfirmDialog'
+import { MonthlyBatchDialog } from '@/features/professora/components/MonthlyBatchDialog'
 import { FormField } from '@/features/professora/components/FormField'
 import {
   buildPaymentReminder,
@@ -78,6 +79,7 @@ export default function Financeiro() {
   const [status, setStatus] = useState<InvoiceStatusFilter>('abertas')
   const [month, setMonth] = useState('')
   const [formOpen, setFormOpen] = useState(presetStudent !== '')
+  const [batchOpen, setBatchOpen] = useState(false)
   const [confirm, setConfirm] = useState<{
     kind: 'pay' | 'undo' | 'cancel'
     invoice: InvoiceAdmin
@@ -144,10 +146,16 @@ export default function Financeiro() {
     <div className="space-y-4">
       <header className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Financeiro</h1>
-        <Button onClick={() => setFormOpen(true)}>
-          <Plus aria-hidden="true" />
-          Nova cobrança
-        </Button>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="outline" onClick={() => setBatchOpen(true)}>
+            <CalendarPlus aria-hidden="true" />
+            Gerar mensalidades do mês
+          </Button>
+          <Button onClick={() => setFormOpen(true)}>
+            <Plus aria-hidden="true" />
+            Nova cobrança
+          </Button>
+        </div>
       </header>
 
       {summary ? (
@@ -261,6 +269,14 @@ export default function Financeiro() {
           confirmLabel={texts[confirm.kind].confirmLabel}
           onConfirm={runConfirm}
           onClose={() => setConfirm(null)}
+        />
+      ) : null}
+
+      {batchOpen ? (
+        <MonthlyBatchDialog
+          now={now}
+          onClose={() => setBatchOpen(false)}
+          onDone={() => invoices.refetch()}
         />
       ) : null}
 
