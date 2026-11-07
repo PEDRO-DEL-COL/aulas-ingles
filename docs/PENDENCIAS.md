@@ -95,26 +95,39 @@ Para o backup semanal e a consulta contra a pausa do Supabase vou precisar que v
 6. **Chave Pix** (tipo, nome e cidade do recebedor) quando existir — agora o admin cadastra em **Admin > Pix e contato**.
 7. **Revisão jurídica** do texto de Privacidade e Termos.
 
-## 9. Migrations a aplicar no Supabase remoto (v0.8.0 a v0.9.1)
+## 9. Migrations a aplicar no Supabase remoto
 
-Aplicar **nesta ordem** (`supabase db push` aplica as pendentes em ordem):
+As da rodada v0.8.0–v0.9.1 (`20261109000001_admin_area`, `20261110000001_invoices_finance`, `20261111000001_pix_txid_limit`) **já foram aplicadas**.
 
-1. `20261109000001_admin_area.sql` — proteção de admins (não se rebaixa/desativa; nunca fica sem admin ativo), normalização e checks de `settings` (Pix vazio ou completo, WhatsApp só dígitos, limites da política) e de `plans`.
-2. `20261110000001_invoices_finance.sql` — desfazer pagamento limpa `paid_at`/`confirmed_by`; `atrasado` nunca gravado; mensalidade exige mês, pacote exige quantidade de aulas.
-3. `20261111000001_pix_txid_limit.sql` — `pix_txid` limitado a 25 alfanuméricos.
+Pendentes (v0.10.0–v0.12.0), **nesta ordem** (`supabase db push` aplica em ordem):
 
-Atenção: depois da 1ª, **excluir o login do último admin ativo** (Authentication > Users) passa a ser bloqueado pelo banco; promova outro admin antes. Os checks novos de `plans`, `invoices` e parte de `settings` são `NOT VALID` (não travam por dados antigos, mas valem para inserções e edições). Os testes pgTAP (`supabase/tests/admin_finance.test.sql` e ajustes em `rls.test.sql`) ainda não foram executados (sem Docker).
+1. `20261112000001_public_site_info.sql` — RPC pública `public_site_info()` (só WhatsApp e planos ativos) para a landing.
+2. `20261113000001_blocked_dates_cancel.sql` — férias/feriados cancelam as aulas do período (cancelada pela professora, com reposição); `lessons.blocked_date_id`; reposição de cancelamento da professora fora do limite mensal.
+3. `20261114000001_monthly_invoices_batch.sql` — RPC `generate_monthly_invoices` (prévia e geração idempotente das mensalidades do mês).
 
-## 10. Perguntas novas (v0.8–v0.9)
+Depois de aplicar: abrir a landing e conferir no DevTools que `GET /rest/v1/rpc/public_site_info` responde 200. Testes pgTAP novos (`public_site_info`, `blocked_dates`, `monthly_invoices`) e os anteriores ainda não foram executados (sem Docker).
 
-1. **WhatsApp da professora** (`settings.whatsapp_number`, editável pelo admin): hoje só é guardado. Querem que a landing e a área do aluno usem esse número em vez do `VITE_WHATSAPP_NUMBER` do build?
-2. **Planos da landing**: a landing ainda mostra os planos de `src/config/brand.ts`. Querem que ela leia os planos ativos do banco (tela Planos e valores)?
-3. **Feriados com aulas já geradas**: hoje a tela só avisa quantas aulas existem no período; a professora cancela na Agenda. Preferem cancelamento automático (como "cancelada pela professora", com direito a reposição)?
-4. **Mensalidades do mês em lote** (gerar as cobranças de todos os alunos a partir do plano) — é a próxima prioridade do financeiro?
+Atenção (já vigente): excluir o login do último admin ativo é bloqueado pelo banco; promova outro admin antes.
 
-## 11. O que ainda falta construir
+## 10. Decisões da rodada 4 (respondidas)
 
-- Interessados (leads da landing, Fase 2), backup/exportação (admin) e mensalidades geradas em lote.
+| Tema                          | Decisão                                                                                       | Onde                                                         |
+| ----------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| WhatsApp                      | Vem de `settings.whatsapp_number` (admin edita); `VITE_WHATSAPP_NUMBER` só como fallback      | `public_site_info`, `src/lib/publicSite.ts`, Perfil do aluno |
+| Planos da landing             | Planos ativos do banco; `brand.ts` só como fallback                                           | `public_site_info`, `Plans.tsx`                              |
+| Férias com aulas já agendadas | Cancelamento automático como "cancelada pela professora", com reposição fora do limite mensal | migration 13                                                 |
+| Mensalidades em lote          | Por mês, a partir do plano de mensalidade; pacote/avulsa não geram em lote                    | migration 14, Financeiro                                     |
+
+## 11. Perguntas que restam
+
+1. **Limite de reposições:** apliquei a isenção a **toda** reposição de aula cancelada pela professora (não só por férias/feriado), porque o motivo dado foi "o cancelamento foi da professora". Se a isenção deve valer só para férias/feriados, é uma troca pequena (usar `blocked_date_id` em `makeups_counted_in_month`).
+2. **Perks dos planos na landing:** o banco não tem a lista de vantagens de cada plano (a landing mostra só nome, aulas, duração, valor e descrição). Querem um campo para isso em `plans`?
+3. **Mensalidade em lote:** a tela sugere o mês **seguinte** e vencimento no dia 10 (o último dia usado fica salvo no navegador). Preferem um dia de vencimento padrão guardado em `settings` (vale para todos os aparelhos)?
+4. **Reposição dentro de férias:** `schedule_makeup` ainda permite marcar reposição numa data bloqueada. Querem bloquear?
+
+## 12. O que ainda falta construir
+
+- Interessados (leads da landing, Fase 2) e backup/exportação (admin).
 - GitHub Actions (consulta contra a pausa e backup) e deploy no Cloudflare Pages — dependem das contas e segredos acima.
 - Validar todas as migrations e os testes pgTAP num Supabase local (`supabase start` + `supabase test db`) e testar o fluxo completo com 2 ou 3 alunos reais.
 - Regenerar `src/types/database.ts` a partir do banco (hoje escrito à mão; ver `supabase/README.md`).
