@@ -5,37 +5,42 @@
 import { buildWhatsAppLink } from '@/lib/whatsapp'
 
 /**
- * Cores do tema. Aplicadas como variáveis CSS em :root por applyBrandTheme() (main.tsx).
- * Os mesmos valores aparecem em src/index.css apenas como padrão antes do JS carregar.
+ * Paleta da marca (fonte documentada). Os MESMOS valores ficam em src/index.css (:root),
+ * que é o que o navegador usa: assim não há flash de tema nem JS no caminho crítico.
+ * Ao mudar uma cor, altere aqui e em index.css (brand.test.ts confere que estão iguais
+ * e que os pares de texto mantêm contraste AA >= 4.5:1).
  */
 export const brandColors = {
-  '--background': 'oklch(0.975 0.016 85)', // creme
-  '--foreground': 'oklch(0.25 0.035 200)', // verde-azulado muito escuro
-  '--card': 'oklch(0.99 0.01 85)',
-  '--card-foreground': 'oklch(0.25 0.035 200)',
-  '--popover': 'oklch(0.99 0.01 85)',
-  '--popover-foreground': 'oklch(0.25 0.035 200)',
-  '--primary': 'oklch(0.42 0.075 195)', // verde-azulado profundo
-  '--primary-foreground': 'oklch(0.98 0.012 85)',
-  '--secondary': 'oklch(0.94 0.025 85)',
-  '--secondary-foreground': 'oklch(0.3 0.04 200)',
-  '--muted': 'oklch(0.945 0.022 85)',
-  '--muted-foreground': 'oklch(0.45 0.03 200)',
-  '--accent': 'oklch(0.93 0.035 70)',
-  '--accent-foreground': 'oklch(0.3 0.04 200)',
-  '--border': 'oklch(0.87 0.03 80)',
-  '--input': 'oklch(0.87 0.03 80)',
-  '--ring': 'oklch(0.55 0.1 195)',
-  '--coral': 'oklch(0.7 0.15 42)', // destaque decorativo (não usar como cor de texto)
-  '--coral-text': 'oklch(0.5 0.15 38)', // coral escuro, contraste AA sobre creme
-  '--sand': 'oklch(0.92 0.04 78)', // fundo de seções alternadas
+  '--background': '#FBF8F3', // creme
+  '--foreground': '#2E3045', // azul-ardósia suave (não é preto)
+  '--card': '#FFFFFF',
+  '--card-foreground': '#2E3045',
+  '--popover': '#FFFFFF',
+  '--popover-foreground': '#2E3045',
+  '--primary': '#5650A0', // lavanda profunda
+  '--primary-foreground': '#FFFFFF',
+  '--secondary': '#E3EEE6', // verde-sálvia claro
+  '--secondary-foreground': '#2E3045',
+  '--muted': '#EEEBF8', // lavanda clarinho
+  '--muted-foreground': '#5B5E78',
+  '--accent': '#FDE6D8', // pêssego
+  '--accent-foreground': '#2E3045',
+  '--border': '#E3DEEE',
+  '--input': '#CFC9E4',
+  '--ring': '#7B74C9',
+  '--sky': '#E4EFFA', // céu claro (fundos)
+  '--peach': '#FDE6D8',
+  '--sage': '#E3EEE6',
+  '--lavender': '#EEEBF8',
+  '--peach-text': '#9A4A1E', // pêssego escuro, texto sobre creme/pêssego
+  '--sage-text': '#2F6B55', // sálvia escuro, texto sobre creme/sálvia
+  '--success': '#2F6F4F',
+  '--success-foreground': '#FFFFFF',
+  '--warning': '#7A5200', // âmbar escuro (texto)
+  '--warning-soft': '#FFF0CC', // fundo de aviso
+  '--destructive': '#B3372F',
+  '--destructive-foreground': '#FFFFFF',
 } as const
-
-export function applyBrandTheme(root: HTMLElement = document.documentElement) {
-  for (const [name, value] of Object.entries(brandColors)) {
-    root.style.setProperty(name, value)
-  }
-}
 
 const whatsappNumber = (import.meta.env.VITE_WHATSAPP_NUMBER ?? '').trim()
 const whatsappMessage =
@@ -47,17 +52,22 @@ if (import.meta.env.DEV && !whatsappNumber) {
   )
 }
 
+export type PlanBilling = 'monthly' | 'package' | 'single'
+
 export type Plan = {
   id: string
   name: string
-  /** Aulas por mês (0 = não se aplica) */
-  lessonsPerMonth: number
-  /** Duração de cada aula, em minutos (0 = não se aplica) */
+  /** Modelo de cobrança: mensalidade fixa, pacote de aulas ou aula avulsa */
+  billing: PlanBilling
+  /** Aulas por mês (monthly), aulas no pacote (package) ou 1 (single) */
+  lessons: number
+  /** Duração de cada aula, em minutos */
   durationMinutes: number
-  /** Preço mensal em reais; null = "a combinar" */
+  /** Preço em reais; null = "a combinar" */
   price: number | null
   highlight: boolean
   description: string
+  perks: string[]
 }
 
 export type Testimonial = {
@@ -74,31 +84,38 @@ export type Faq = { question: string; answer: string }
 const plans: Plan[] = [
   // PLACEHOLDER: valores de exemplo. Ajustar antes de publicar (price: null = "a combinar").
   {
-    id: 'essencial',
-    name: 'Essencial',
-    lessonsPerMonth: 4,
+    id: 'mensalidade',
+    name: 'Mensalidade',
+    billing: 'monthly',
+    lessons: 4,
     durationMinutes: 50,
     price: 280,
-    highlight: false,
-    description: 'Uma aula por semana para manter o ritmo.',
-  },
-  {
-    id: 'intensivo',
-    name: 'Intensivo',
-    lessonsPerMonth: 8,
-    durationMinutes: 50,
-    price: 520,
     highlight: true,
-    description: 'Duas aulas por semana para evoluir mais rápido.',
+    description: 'Uma aula por semana, com valor fixo todo mês. Ótimo para criar ritmo.',
+    perks: ['Horário fixo na semana', 'Materiais e tarefas na área do aluno'],
   },
   {
-    id: 'sob-medida',
-    name: 'Sob medida',
-    lessonsPerMonth: 0,
-    durationMinutes: 0,
-    price: null,
+    id: 'pacote',
+    name: 'Pacote de aulas',
+    billing: 'package',
+    lessons: 10,
+    durationMinutes: 50,
+    price: 650,
     highlight: false,
-    description: 'Preparação para entrevista, viagem ou prova. Vamos conversar.',
+    description: 'Compre um pacote e use as aulas no seu tempo, sem mensalidade.',
+    perks: ['Horários combinados a cada aula', 'Saldo de aulas na área do aluno'],
+  },
+  {
+    id: 'avulsa',
+    name: 'Aula avulsa',
+    billing: 'single',
+    lessons: 1,
+    durationMinutes: 50,
+    price: 85,
+    highlight: false,
+    description:
+      'Para tirar uma dúvida, treinar uma entrevista ou experimentar o jeito de ensinar.',
+    perks: ['Sem compromisso', 'Agende quando precisar'],
   },
 ]
 
@@ -134,9 +151,14 @@ const faq: Faq[] = [
       'Você chama no WhatsApp, combinamos um horário e fazemos uma conversa online para entender seu nível e seus objetivos. Depois montamos o plano ideal para você.',
   },
   {
-    question: 'Preciso instalar algum programa?',
+    question: 'As aulas são individuais? Preciso instalar algum programa?',
     answer:
-      'Não. As aulas acontecem pelo Google Meet, direto no navegador ou no aplicativo do celular. Você recebe um link fixo e usa sempre o mesmo.',
+      'As aulas são individuais e online, pelo Google Meet, direto no navegador ou no aplicativo do celular. Você recebe um link fixo e usa sempre o mesmo. Não precisa instalar nada.',
+  },
+  {
+    question: 'Preciso de uma conta Google?',
+    answer:
+      'Sim, para acessar a área do aluno (agenda, materiais e financeiro) você entra com uma conta Google. Se não tiver, dá para criar uma de graça usando o e-mail que você já usa, inclusive de outro provedor.',
   },
   {
     question: 'Para qual nível são as aulas?',

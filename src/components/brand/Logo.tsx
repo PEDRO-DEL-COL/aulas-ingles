@@ -1,0 +1,38 @@
+import { brand } from '@/config/brand'
+
+type Props = {
+  /** Lado em pixels */
+  size?: number
+  className?: string
+  /** true quando o nome da marca já aparece em texto ao lado (esconde do leitor de tela) */
+  decorative?: boolean
+}
+
+/** Balão de fala em traço fino com uma estrela, sobre um selo lavanda. Mesmo desenho de public/favicon.svg. */
+export function Logo({ size = 36, className, decorative = false }: Props) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 64 64"
+      width={size}
+      height={size}
+      className={className}
+      {...(decorative
+        ? { 'aria-hidden': true }
+        : { role: 'img', 'aria-label': brand.name })}
+    >
+      <rect width="64" height="64" rx="18" fill="var(--primary)" />
+      <path
+        d="M32 14c-10.5 0-18 6.6-18 15 0 4.6 2.3 8.6 6 11.3-.2 3-1.4 5.4-3 7.2 4.2-.3 7.4-1.8 9.6-3.5 1.7.4 3.5.6 5.4.6 10.5 0 18-6.6 18-15.6S42.5 14 32 14z"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M32 22.5l2.3 5.7 5.7 2.3-5.7 2.3L32 38.5l-2.3-5.7L24 30.5l5.7-2.3z"
+        fill="var(--peach)"
+      />
+    </svg>
+  )
+}
