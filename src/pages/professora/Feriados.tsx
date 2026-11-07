@@ -1,25 +1,31 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
 
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/field'
 import {
+  blockPreviewMessage,
+  canceledSummaryTitle,
   classifyBlockedDates,
   formatBlockedRange,
   validateBlockedDateForm,
   type BlockedDateFormErrors,
+  type BlockedDateFormValues,
 } from '@/features/professora/blocked'
 import {
+  countCanceledByBlockedDate,
   countScheduledLessonsInRange,
   deleteBlockedDate,
   listBlockedDates,
+  listLessonsCanceledByBlock,
   saveBlockedDate,
   type BlockedDate,
 } from '@/features/professora/blockedDatesApi'
 import { ConfirmDialog } from '@/features/professora/components/ConfirmDialog'
+import { MakeupToScheduleList } from '@/features/professora/components/MakeupToScheduleList'
 import { FormField } from '@/features/professora/components/FormField'
+import type { LessonWithStudent } from '@/features/professora/lessons'
 import { useTimezone } from '@/features/professora/useTimezone'
 import {
   EmptyState,
@@ -43,11 +49,13 @@ export default function Feriados() {
   const [reason, setReason] = useState('')
   const [errors, setErrors] = useState<BlockedDateFormErrors>({})
   const [busy, setBusy] = useState(false)
-  const [feedback, setFeedback] = useState<{
-    ok: boolean
-    text: string
-    lessons?: number
+  const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null)
+  const [canceled, setCanceled] = useState<LessonWithStudent[] | null>(null)
+  const [confirmSave, setConfirmSave] = useState<{
+    values: BlockedDateFormValues
+    count: number
   } | null>(null)
+  const counts = useQuery('prof-feriados-contagem', countCanceledByBlockedDate)
 
   function reset() {
     setEditing(null)
@@ -73,25 +81,45 @@ export default function Feriados() {
     const found = validateBlockedDateForm(values)
     setErrors(found)
     setFeedback(null)
+    setCanceled(null)
     if (Object.keys(found).length > 0) return
     setBusy(true)
     try {
-      const end = endsOn === '' ? startsOn : endsOn
-      await saveBlockedDate(values, editing?.id)
       let count = 0
       try {
-        count = await countScheduledLessonsInRange(startsOn, end, timezone)
+        count = await countScheduledLessonsInRange(
+          startsOn,
+          endsOn === '' ? startsOn : endsOn,
+          timezone,
+        )
       } catch {
         count = 0
       }
-      setFeedback({ ok: true, text: 'Período salvo.', lessons: count })
-      reset()
-      list.refetch()
+      if (count > 0) {
+        setConfirmSave({ values, count })
+        return
+      }
+      await persist(values)
     } catch (err) {
       setFeedback({ ok: false, text: friendlyError(err) })
     } finally {
       setBusy(false)
     }
+  }
+
+  async function persist(values: BlockedDateFormValues) {
+    const id = await saveBlockedDate(values, editing?.id)
+    let affected: LessonWithStudent[] = []
+    try {
+      affected = await listLessonsCanceledByBlock(id)
+    } catch {
+      affected = []
+    }
+    setFeedback({ ok: true, text: 'Período salvo.' })
+    setCanceled(affected)
+    reset()
+    list.refetch()
+    counts.refetch()
   }
 
   const groups = list.data
@@ -102,12 +130,14 @@ export default function Feriados() {
     <div className="space-y-4">
       <PageHeader
         title="Férias e feriados"
-        description="Dias bloqueados não recebem aulas quando você gera as aulas recorrentes."
+        description="Dias bloqueados não recebem aulas na geração recorrente."
       />
 
       <Alert variant="info">
-        Aulas que já foram geradas nesses dias não são canceladas automaticamente:
-        cancele-as na Agenda.
+        As aulas já agendadas nesse período são canceladas automaticamente como
+        &quot;cancelada pela professora&quot;, com direito a reposição (não contam no
+        limite mensal do aluno). Excluir o período não reativa essas aulas: elas continuam
+        canceladas e a reposição segue valendo.
       </Alert>
 
       <form
@@ -172,18 +202,32 @@ export default function Feriados() {
         {feedback ? (
           <Alert variant={feedback.ok ? 'success' : 'destructive'}>{feedback.text}</Alert>
         ) : null}
-        {feedback?.lessons ? (
-          <Alert variant="warning">
-            Já existem {feedback.lessons}{' '}
-            {feedback.lessons === 1 ? 'aula agendada' : 'aulas agendadas'} nesse período.
-            Cancele-as na{' '}
-            <Link to="/app/professora/agenda" className="font-medium underline">
-              Agenda
-            </Link>{' '}
-            (cancelada pela professora dá direito a reposição).
-          </Alert>
-        ) : null}
       </div>
+
+      {canceled && canceled.length > 0 ? (
+        <section
+          aria-label="Aulas canceladas automaticamente"
+          className="space-y-3 rounded-xl border bg-card p-4 shadow-sm"
+        >
+          <h2 className="font-semibold">{canceledSummaryTitle(canceled.length)}</h2>
+          <p className="text-sm text-muted-foreground">
+            Agende a reposição de cada uma abaixo.
+          </p>
+          <MakeupToScheduleList
+            lessons={canceled.filter((l) => l.status === 'cancelada_professora')}
+            timezone={timezone}
+            showReason={false}
+            onChanged={() => {
+              const id = canceled[0]?.blocked_date_id
+              if (id) {
+                void listLessonsCanceledByBlock(id)
+                  .then(setCanceled)
+                  .catch(() => undefined)
+              }
+            }}
+          />
+        </section>
+      ) : null}
 
       {list.error ? (
         <ErrorState error={list.error} onRetry={list.refetch} />
@@ -200,26 +244,39 @@ export default function Feriados() {
             items={groups.atuais}
             onEdit={startEdit}
             onDelete={setDeleting}
+            counts={counts.data}
           />
           <Group
             title="Próximos"
             items={groups.futuras}
             onEdit={startEdit}
             onDelete={setDeleting}
+            counts={counts.data}
           />
           <Group
             title="Passados"
             items={groups.passadas}
             onEdit={startEdit}
             onDelete={setDeleting}
+            counts={counts.data}
           />
         </>
       )}
 
+      {confirmSave ? (
+        <ConfirmDialog
+          title="Cancelar aulas do período"
+          description={blockPreviewMessage(confirmSave.count)}
+          confirmLabel="Salvar e cancelar aulas"
+          onConfirm={() => persist(confirmSave.values)}
+          onClose={() => setConfirmSave(null)}
+        />
+      ) : null}
+
       {deleting ? (
         <ConfirmDialog
           title="Excluir período"
-          description={`Excluir o período ${formatBlockedRange(deleting.starts_on, deleting.ends_on)}${deleting.reason ? ` (${deleting.reason})` : ''}? Ao gerar aulas de novo, esses dias voltam a receber aulas.`}
+          description={`Excluir o período ${formatBlockedRange(deleting.starts_on, deleting.ends_on)}${deleting.reason ? ` (${deleting.reason})` : ''}? Ao gerar aulas de novo, esses dias voltam a receber aulas; as aulas já canceladas por ele continuam canceladas.`}
           confirmLabel="Excluir"
           onConfirm={async () => {
             await deleteBlockedDate(deleting.id)
@@ -238,11 +295,13 @@ function Group({
   items,
   onEdit,
   onDelete,
+  counts,
 }: {
   title: string
   items: BlockedDate[]
   onEdit: (b: BlockedDate) => void
   onDelete: (b: BlockedDate) => void
+  counts?: Map<string, number>
 }) {
   if (items.length === 0) return null
   return (
@@ -258,6 +317,12 @@ function Group({
             >
               <div className="min-w-0 flex-1">
                 <p className="font-medium">{range}</p>
+                {counts?.get(b.id) ? (
+                  <p className="text-sm text-muted-foreground">
+                    {counts.get(b.id)}{' '}
+                    {counts.get(b.id) === 1 ? 'aula cancelada' : 'aulas canceladas'}
+                  </p>
+                ) : null}
                 {b.reason ? (
                   <p className="text-sm break-words text-muted-foreground">{b.reason}</p>
                 ) : null}

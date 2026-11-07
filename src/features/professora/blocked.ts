@@ -57,6 +57,32 @@ export function formatBlockedRange(startsOn: string, endsOn: string): string {
     : `${formatDateOnly(startsOn)} a ${formatDateOnly(endsOn)}`
 }
 
+/** Aviso mostrado antes de salvar um período com aulas já agendadas. */
+export function blockPreviewMessage(count: number): string {
+  const aulas = count === 1 ? '1 aula agendada' : `${count} aulas agendadas`
+  const serao = count === 1 ? 'será cancelada' : 'serão canceladas'
+  return `Ao salvar, ${aulas} nesse período ${serao} como 'cancelada pela professora', com direito a reposição (não contam no limite mensal do aluno).`
+}
+
+/** "1 aula cancelada automaticamente" / "N aulas canceladas automaticamente". */
+export function canceledSummaryTitle(count: number): string {
+  return count === 1
+    ? '1 aula cancelada automaticamente'
+    : `${count} aulas canceladas automaticamente`
+}
+
+/** Conta aulas por blocked_date_id (ignora nulos). */
+export function countByBlockedDate(
+  rows: readonly { blocked_date_id: string | null }[],
+): Map<string, number> {
+  const map = new Map<string, number>()
+  for (const r of rows) {
+    if (r.blocked_date_id)
+      map.set(r.blocked_date_id, (map.get(r.blocked_date_id) ?? 0) + 1)
+  }
+  return map
+}
+
 export type MaterialTarget =
   | { kind: 'geral' }
   | { kind: 'aluno'; studentId: string }

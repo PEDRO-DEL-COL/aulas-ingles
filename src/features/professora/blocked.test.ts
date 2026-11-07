@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  blockPreviewMessage,
+  canceledSummaryTitle,
   classifyBlockedDates,
+  countByBlockedDate,
   formatBlockedRange,
   isDateBlocked,
   validateBlockedDateForm,
@@ -99,5 +102,29 @@ describe('validateMaterialForm', () => {
       validateMaterialForm({ ...ok, targetKind: 'aula', studentId: 's', lessonId: 'l' }),
     ).toEqual({})
     expect(validateMaterialForm({ ...ok, targetKind: '' }).targetKind).toBeDefined()
+  })
+})
+
+describe('textos de bloqueio', () => {
+  it('prévia no singular e plural', () => {
+    expect(blockPreviewMessage(1)).toMatch(/1 aula agendada nesse período será cancelada/)
+    expect(blockPreviewMessage(3)).toMatch(
+      /3 aulas agendadas nesse período serão canceladas.*não contam no limite mensal/,
+    )
+  })
+  it('título do resumo', () => {
+    expect(canceledSummaryTitle(1)).toBe('1 aula cancelada automaticamente')
+    expect(canceledSummaryTitle(4)).toBe('4 aulas canceladas automaticamente')
+  })
+  it('conta por período ignorando nulos', () => {
+    const m = countByBlockedDate([
+      { blocked_date_id: 'x' },
+      { blocked_date_id: null },
+      { blocked_date_id: 'x' },
+      { blocked_date_id: 'y' },
+    ])
+    expect(m.get('x')).toBe(2)
+    expect(m.get('y')).toBe(1)
+    expect(m.size).toBe(2)
   })
 })

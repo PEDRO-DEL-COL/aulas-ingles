@@ -3,6 +3,9 @@ import { friendlyError } from '@/features/shared/errors'
 import { getSupabase } from '@/lib/supabase'
 import type { Tables } from '@/types/database'
 
+import { attachStudents } from './api'
+import { countByBlockedDate } from './blocked'
+import type { LessonWithStudent } from './lessons'
 import { addDaysKey, startOfDayUtc } from './tz'
 
 export type BlockedDate = Tables<'blocked_dates'>
@@ -23,7 +26,7 @@ export async function listBlockedDates(): Promise<BlockedDate[]> {
 export async function saveBlockedDate(
   input: { starts_on: string; ends_on: string; reason: string },
   id?: string,
-): Promise<void> {
+): Promise<string> {
   const row = {
     starts_on: input.starts_on,
     ends_on: input.ends_on === '' ? input.starts_on : input.ends_on,
@@ -32,8 +35,32 @@ export async function saveBlockedDate(
   const query = id
     ? getSupabase().from('blocked_dates').update(row).eq('id', id)
     : getSupabase().from('blocked_dates').insert(row)
-  const { error } = await query
+  const { data, error } = await query.select('id').single()
   if (error) fail(error, 'Não foi possível salvar o período. Tente de novo.')
+  return data.id
+}
+
+/** Aulas canceladas automaticamente por um período (lessons.blocked_date_id), com o aluno. */
+export async function listLessonsCanceledByBlock(
+  blockedDateId: string,
+): Promise<LessonWithStudent[]> {
+  const { data, error } = await getSupabase()
+    .from('lessons')
+    .select('*')
+    .eq('blocked_date_id', blockedDateId)
+    .order('starts_at', { ascending: true })
+  if (error) fail(error, 'Não foi possível carregar as aulas canceladas.')
+  return attachStudents(data)
+}
+
+/** Quantas aulas cada período cancelou (uma consulta, agrupada no cliente). */
+export async function countCanceledByBlockedDate(): Promise<Map<string, number>> {
+  const { data, error } = await getSupabase()
+    .from('lessons')
+    .select('blocked_date_id')
+    .not('blocked_date_id', 'is', null)
+  if (error) fail(error, 'Não foi possível contar as aulas canceladas.')
+  return countByBlockedDate(data)
 }
 
 export async function deleteBlockedDate(id: string): Promise<void> {

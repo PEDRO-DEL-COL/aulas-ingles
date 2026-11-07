@@ -23,7 +23,7 @@ function fail(error: unknown, fallback: string): never {
 
 const LITE = 'id, full_name, phone, meet_link'
 
-async function attachStudents(lessons: Lesson[]): Promise<LessonWithStudent[]> {
+export async function attachStudents(lessons: Lesson[]): Promise<LessonWithStudent[]> {
   const ids = [...new Set(lessons.map((l) => l.student_id))]
   const map = new Map<string, StudentLite>()
   if (ids.length > 0) {
