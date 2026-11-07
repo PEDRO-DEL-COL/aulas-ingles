@@ -1,12 +1,19 @@
 /**
- * Tipos do banco, escritos à mão no formato de `supabase gen types typescript`.
+ * Tipos do banco, ESCRITOS À MÃO no formato de `supabase gen types typescript`,
+ * espelhando supabase/migrations até 20261111000001_pix_txid_limit.sql.
  *
- * SUBSTITUIR pelo arquivo gerado quando houver projeto Supabase:
- *   supabase gen types typescript --linked > src/types/database.ts
+ * Por que à mão: gerar exige um Postgres com as migrations aplicadas — o projeto
+ * remoto (`--linked`, só quem tem acesso ao painel deve rodar) ou um banco local
+ * (precisa de Docker, ausente nesta máquina). Para regenerar (ver supabase/README.md):
+ *   supabase gen types typescript --linked > src/types/database.ts      # remoto
+ *   supabase start && supabase gen types typescript --local > src/types/database.ts
+ * Depois rode `npm run typecheck`: o gerado é mais detalhado (Relationships, views
+ * anuláveis), mas os aliases exportados no fim (Tables, TablesInsert, ...) são os mesmos.
  *
- * Para acrescentar tabelas antes disso: adicione uma entrada em `Tables`
- * (Row, Insert, Update, Relationships) e, se preciso, em `Enums` e `Functions`,
- * espelhando as migrations em supabase/migrations.
+ * Ao criar uma migration que muda colunas, enums ou RPCs, atualize este arquivo no
+ * mesmo commit: entrada em `Tables` (Row, Insert, Update, Relationships) e, se preciso,
+ * em `Enums` e `Functions`. Checks/triggers (ex.: limites de texto) não aparecem nos
+ * tipos; ficam validados no front (ver os arquivos validation.ts em src/features) e no banco.
  */
 
 export type Json =
@@ -191,6 +198,7 @@ type InvoiceRow = {
   student_notified_paid_at: string | null
   paid_at: string | null
   confirmed_by: string | null
+  /** 1 a 25 alfanuméricos (BR Code) ou null; ver isValidTxid em src/lib/pix.ts. */
   pix_txid: string | null
   created_at: string
   updated_at: string

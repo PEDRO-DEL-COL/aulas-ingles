@@ -14,6 +14,7 @@ SQL versionado do projeto. Nunca altere tabelas só pelo painel; crie uma nova m
 8. `20261108000004_cancellation_policy.sql`: política de cancelamento e reposição (colunas, triggers e RPCs).
 9. `20261109000001_admin_area.sql`: proteção de admins (trigger `profiles_guard_admin`: o admin não rebaixa/desativa a si mesmo pelo app; nunca fica sem admin ativo, de qualquer origem; o app não atribui `responsavel`), normalização de `settings` (vazio vira `NULL`, WhatsApp só dígitos) e checks `settings_whatsapp_format_chk`, `settings_pix_complete_chk`, `settings_policy_limits_chk`, `plans_billing_fields_chk`.
 10. `20261110000001_invoices_finance.sql`: financeiro — desfazer pagamento limpa `paid_at`/`confirmed_by`; `atrasado` nunca é gravado (vira `em_aberto`; é derivado na view); check `invoices_billing_fields_chk` (mensalidade exige `reference_month`, pacote exige `lessons_count`); índice dos avisos de "já paguei".
+11. `20261111000001_pix_txid_limit.sql`: `invoices.pix_txid` passa a aceitar só 1 a 25 alfanuméricos (limite do BR Code; antes 35). Valores fora do padrão viram `NULL` (o front gera o txid). Check `invoices_pix_txid_chk`.
 
 As migrations 1 a 8 já foram aplicadas no projeto remoto: não edite; mudanças vão em arquivos novos com timestamp maior (`supabase migration new nome`). Todas são idempotentes.
 
@@ -65,9 +66,14 @@ Local (precisa de Docker): `supabase start` e `supabase db reset`.
 
 ## Tipos TypeScript
 
+Hoje `src/types/database.ts` é **escrito à mão** espelhando as migrations (gerar exige um Postgres com elas aplicadas: o remoto ou um local com Docker). Quem tiver acesso pode regenerar e conferir com `npm run typecheck`:
+
 ```bash
-supabase gen types typescript --linked > src/types/database.ts
+supabase gen types typescript --linked > src/types/database.ts   # projeto remoto
+supabase gen types typescript --local  > src/types/database.ts   # após supabase start
 ```
+
+Toda migration que muda colunas, enums ou RPCs deve atualizar esse arquivo no mesmo commit.
 
 ## Bootstrap do primeiro admin
 
@@ -102,7 +108,7 @@ A professora cadastra o aluno em `students` com o e-mail da conta Google dele. N
 - Aluno não faz UPDATE em `lessons`; cancelamento só por `cancel_lesson`.
 - Inadimplência: consulte `invoices_with_status` e use `effective_status`.
 - Mensalidades: valores em centavos, `reference_month` no dia 1.
-- Aulas recorrentes: `rpc('generate_lessons', { p_from, p_to })` (só staff, máx. 366 dias, pula `blocked_dates`).
+- Aulas recorrentes: `rpc('generate_lessons', { p_from, p_to })` (só staff, máx. 366 dias, pula `blocked_dates`). A Agenda oferece a semana exibida ou as próximas 4/8 semanas a partir de hoje.
 - Tabelas novas: o Supabase concede privilégios amplos por padrão; sempre habilite RLS e revogue de `anon`/`authenticated` o que não for usado.
 - Config: `config.toml` foi escrito à mão (a CLI não estava instalada). Se rodar `supabase init`, mescle. Para Google, defina `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` e `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET` e ponha `enabled = true`.
 
