@@ -1,0 +1,19 @@
+-- Seed de exemplo. Roda em `supabase db reset` (local). NAO coloque e-mails reais aqui.
+--
+-- BOOTSTRAP DO PRIMEIRO ADMIN (producao)
+-- Nenhum admin existe no inicio, e o front nao consegue se promover (trigger
+-- guard_profile_update). Passos:
+--   1. A pessoa faz login com Google uma vez (o profile e criado com active = false).
+--   2. No SQL editor do painel Supabase (roda como postgres, passa pelo guard), execute:
+--
+--      update public.profiles
+--         set role = 'admin', active = true
+--       where email = 'EMAIL_DO_ADMIN@exemplo.com';
+--
+--   3. Esse admin promove a professora pela tela de usuarios (ou o mesmo update
+--      com role = 'professora').
+--
+-- Cadastro de aluno de teste (local):
+--
+-- insert into public.students (full_name, email) values ('Aluno Exemplo', 'aluno@exemplo.com');
+-- (no primeiro login com esse e-mail, o trigger liga o profile e ativa o acesso)
