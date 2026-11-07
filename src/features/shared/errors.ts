@@ -26,6 +26,34 @@ const KNOWN: readonly [needle: string, message: string][] = [
   ['somente a equipe', 'Somente a equipe pode fazer isso.'],
   ['so aulas canceladas pelo aluno', 'Essa decisão já foi tomada ou não se aplica mais.'],
   ['students_email', 'Já existe um aluno cadastrado com esse e-mail.'],
+  // Admin (migration 20261109000001_admin_area.sql)
+  ['proprio acesso de admin', 'Você não pode tirar o seu próprio acesso de admin.'],
+  ['pelo menos um admin ativo', 'O sistema precisa de pelo menos um admin ativo.'],
+  ['papel responsavel', 'Escolha um papel com acesso: aluno, professora ou admin.'],
+  [
+    'settings_pix_complete',
+    'Para salvar a chave Pix, informe também o tipo da chave, o nome e a cidade do recebedor.',
+  ],
+  [
+    'settings_whatsapp_format',
+    'WhatsApp inválido: use só dígitos com DDI e DDD (ex.: 5511999998888).',
+  ],
+  ['settings_policy_limits', 'Valor fora do limite permitido para a política.'],
+  [
+    'settings_late_band_lt_min',
+    'A faixa intermediária precisa ser menor que o prazo mínimo de cancelamento.',
+  ],
+  [
+    'plans_billing_fields',
+    'Mensalidade precisa de aulas por mês; pacote precisa da quantidade de aulas.',
+  ],
+  // Financeiro (migrations 20261110000001 e 20261111000001)
+  [
+    'invoices_billing_fields',
+    'Mensalidade precisa do mês de referência; pacote precisa da quantidade de aulas.',
+  ],
+  ['invoices_monthly_unique', 'Já existe uma mensalidade deste aluno para esse mês.'],
+  ['invoices_pix_txid', 'Identificador do Pix inválido: use até 25 letras ou números.'],
 ]
 
 export const GENERIC_ERROR = 'Algo deu errado. Verifique a conexão e tente de novo.'
