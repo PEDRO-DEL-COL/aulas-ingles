@@ -6,6 +6,19 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.11.0] - 2026-11-07
+
+### Adicionado
+
+- Migration `20261113000001_blocked_dates_cancel.sql`: ao cadastrar (ou ampliar) férias/feriados, o banco cancela as aulas agendadas do período como "cancelada pela professora", com direito a reposição, motivo e vínculo com o período (`lessons.blocked_date_id`); testes pgTAP `blocked_dates.test.sql`.
+- Férias e feriados: prévia de quantas aulas serão canceladas (com confirmação), resumo das canceladas depois de salvar com "Agendar reposição" em cada uma, e contagem de aulas canceladas por período.
+- Hoje: seção "Reposições a agendar" (aulas com direito a reposição ainda sem reposição).
+- Aluno: motivo do cancelamento e situação da reposição ("a professora vai agendar" ou "Reposição agendada para …") na agenda, no histórico e no detalhe da aula.
+
+### Alterado
+
+- Reposição de aula cancelada pela professora (por férias/feriado ou não) deixa de contar no limite mensal de reposições do aluno.
+
 ## [0.10.0] - 2026-11-07
 
 ### Adicionado

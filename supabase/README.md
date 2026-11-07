@@ -16,6 +16,7 @@ SQL versionado do projeto. Nunca altere tabelas só pelo painel; crie uma nova m
 10. `20261110000001_invoices_finance.sql`: financeiro — desfazer pagamento limpa `paid_at`/`confirmed_by`; `atrasado` nunca é gravado (vira `em_aberto`; é derivado na view); check `invoices_billing_fields_chk` (mensalidade exige `reference_month`, pacote exige `lessons_count`); índice dos avisos de "já paguei".
 11. `20261111000001_pix_txid_limit.sql`: `invoices.pix_txid` passa a aceitar só 1 a 25 alfanuméricos (limite do BR Code; antes 35). Valores fora do padrão viram `NULL` (o front gera o txid). Check `invoices_pix_txid_chk`.
 12. `20261112000001_public_site_info.sql`: RPC pública `public_site_info()` (anon e authenticated): devolve só `whatsapp_number` de `settings` e os planos ativos (campos de exibição). anon continua sem SELECT em `settings`/`plans`.
+13. `20261113000001_blocked_dates_cancel.sql`: inserir/alterar datas em `blocked_dates` cancela as aulas `agendada`/`reposicao` futuras do período (data local) como `cancelada_professora` (com reposição), com `cancel_reason` e `lessons.blocked_date_id`; reposição cuja origem foi cancelada pela professora não conta no limite mensal (`makeups_counted_in_month`, usada pelo trigger e por `makeups_used_in_month`).
 
 As migrations 1 a 8 já foram aplicadas no projeto remoto: não edite; mudanças vão em arquivos novos com timestamp maior (`supabase migration new nome`). Todas são idempotentes.
 
@@ -53,7 +54,12 @@ Trigger `lessons_makeup_rules` (reposição = `status 'reposicao'` com `reschedu
 
 - `reposicao` sem `rescheduled_from` => erro. A origem deve ser do mesmo aluno, ter `makeup_eligible = true` e ainda não ter reposição (índice único parcial `lessons_rescheduled_from_key`).
 - Limite `max_makeups_per_month` por aluno no **mês civil da data da reposição** (`starts_at`, fuso `America/Sao_Paulo` fixo no código), não o mês da aula cancelada. Não contam para o limite: reposição cancelada pela professora e reposição cancelada pelo aluno com direito a nova reposição. Se uma reposição for cancelada com direito, ela própria vira origem da próxima (encadeamento).
-- O limite não tem exceção por staff; para liberar mais, o admin sobe `max_makeups_per_month`.
+- Não contam também (desde a migration 13) reposições cuja **aula de origem foi cancelada pela professora** (inclusive por férias/feriado): o cancelamento foi dela.
+- Fora isso, o limite não tem exceção por staff; para liberar mais, o admin sobe `max_makeups_per_month`.
+
+## Férias e feriados
+
+Ao inserir um período em `blocked_dates` (ou mudar as datas), o trigger `blocked_dates_cancel_lessons` cancela as aulas futuras `agendada`/`reposicao` cuja data local (fuso do horário fixo; sem horário, `America/Sao_Paulo`) cai no período: `cancelada_professora`, `makeup_eligible = true`, `cancel_reason = 'Férias/feriado: <motivo>'`, `blocked_date_id`. Excluir o período não reativa as aulas. `generate_lessons` continua pulando as datas bloqueadas.
 
 ## Aplicar
 
