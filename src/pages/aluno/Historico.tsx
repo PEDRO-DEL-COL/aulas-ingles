@@ -14,7 +14,12 @@ import {
 } from '@/features/shared/components/StateViews'
 import { LessonStatusBadge } from '@/features/aluno/components/StatusBadges'
 import { formatDateTime } from '@/features/shared/datetime'
-import { isActiveStatus, lessonEnd, makeupText } from '@/features/aluno/lessons'
+import {
+  findMakeup,
+  isActiveStatus,
+  lessonEnd,
+  makeupText,
+} from '@/features/aluno/lessons'
 import { useNow } from '@/features/shared/useNow'
 
 export default function Historico() {
@@ -27,7 +32,7 @@ export default function Historico() {
       const lessons = await listLessons(student.id)
       const past = lessons.filter((l) => lessonEnd(l).getTime() <= Date.now()).reverse()
       const notes = await listLessonNotes(past.map((l) => l.id))
-      return { past, notes }
+      return { past, notes, all: lessons }
     },
   )
 
@@ -47,7 +52,9 @@ export default function Historico() {
           {data.past.map((l) => {
             const note = data.notes.get(l.id)
             const text = note?.summary || note?.content
-            const extra = makeupText(l)
+            const extra = makeupText(l, findMakeup(l.id, data.all), (iso) =>
+              formatDateTime(iso, timezone),
+            )
             return (
               <li key={l.id}>
                 <Card className="gap-2">

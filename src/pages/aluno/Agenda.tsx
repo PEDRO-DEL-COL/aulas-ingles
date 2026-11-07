@@ -16,9 +16,15 @@ import {
 } from '@/features/shared/components/StateViews'
 import { useNow } from '@/features/shared/useNow'
 import { LessonStatusBadge } from '@/features/aluno/components/StatusBadges'
-import { dayKey, formatDayFull, formatTime } from '@/features/shared/datetime'
+import {
+  dayKey,
+  formatDateTime,
+  formatDayFull,
+  formatTime,
+} from '@/features/shared/datetime'
 import {
   canStudentCancel,
+  findMakeup,
   lessonEnd,
   makeupText,
   type Lesson,
@@ -66,7 +72,9 @@ export default function Agenda() {
               </h2>
               <ul className="space-y-2">
                 {lessons.map((l) => {
-                  const note = makeupText(l)
+                  const note = makeupText(l, findMakeup(l.id, data ?? []), (iso) =>
+                    formatDateTime(iso, timezone),
+                  )
                   return (
                     <li key={l.id}>
                       <Card className="gap-2">

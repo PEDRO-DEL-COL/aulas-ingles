@@ -121,13 +121,45 @@ export function lessonStatusInfo(status: LessonStatus): { label: string; tone: T
   return LESSON_STATUS[status]
 }
 
-/** Texto sobre reposição de uma aula cancelada; null quando não se aplica. */
+/** Reposição (ainda não cancelada) criada a partir da aula `lessonId`, procurada no array. */
+export function findMakeup<T extends Pick<Lesson, 'rescheduled_from' | 'status'>>(
+  lessonId: string,
+  lessons: readonly T[],
+): T | null {
+  return (
+    lessons.find(
+      (l) =>
+        l.rescheduled_from === lessonId &&
+        l.status !== 'cancelada_aluno' &&
+        l.status !== 'cancelada_professora',
+    ) ?? null
+  )
+}
+
+/**
+ * Texto sobre reposição de uma aula cancelada; null quando não se aplica.
+ * `makeup` = reposição já agendada (ver findMakeup); `formatDate` formata a data dela.
+ */
 export function makeupText(
-  lesson: Pick<Lesson, 'status' | 'makeup_eligible'>,
+  lesson: Pick<Lesson, 'status' | 'makeup_eligible' | 'cancel_reason'>,
+  makeup?: Pick<Lesson, 'starts_at'> | null,
+  formatDate?: (iso: string) => string,
 ): string | null {
-  if (lesson.status === 'cancelada_professora') return 'Você tem direito a reposição.'
+  const scheduled = makeup
+    ? ` Reposição agendada para ${formatDate ? formatDate(makeup.starts_at) : makeup.starts_at}.`
+    : ''
+  if (lesson.status === 'cancelada_professora') {
+    const reason = lesson.cancel_reason?.trim()
+    const head = reason
+      ? `Cancelada pela professora (${reason}).`
+      : 'Cancelada pela professora.'
+    return makeup
+      ? `${head} Você tem direito a reposição.${scheduled}`
+      : `${head} Você tem direito a reposição; a professora vai agendar.`
+  }
   if (lesson.status === 'cancelada_aluno') {
-    if (lesson.makeup_eligible === true) return 'Você tem direito a reposição.'
+    if (lesson.makeup_eligible === true)
+      return `Você tem direito a reposição.${scheduled}`
     if (lesson.makeup_eligible === false) return 'Sem direito a reposição.'
     return 'Reposição a critério da professora.'
   }

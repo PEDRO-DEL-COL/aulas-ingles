@@ -7,7 +7,7 @@ import type { Tables } from '@/types/database'
 
 import { friendlyError } from '@/features/shared/errors'
 import type { Invoice } from './invoices'
-import type { Lesson, Settings, StudentRecord } from './lessons'
+import { findMakeup, type Lesson, type Settings, type StudentRecord } from './lessons'
 
 export type Plan = Tables<'plans'>
 export type Material = Tables<'materials'>
@@ -19,6 +19,8 @@ export type LessonDetail = {
   lesson: Lesson
   note: LessonNote | null
   materials: Material[]
+  /** Reposição já agendada a partir desta aula (se houver). */
+  makeup: Lesson | null
 }
 
 function fail(error: unknown, fallback: string): never {
@@ -67,7 +69,7 @@ export async function getLesson(lessonId: string): Promise<LessonDetail | null> 
   if (error) fail(error, 'Não foi possível carregar a aula.')
   if (!lesson) return null
 
-  const [notes, materials] = await Promise.all([
+  const [notes, materials, makeups] = await Promise.all([
     supabase
       .from('lesson_notes')
       .select('id, lesson_id, content, summary, homework')
@@ -78,10 +80,17 @@ export async function getLesson(lessonId: string): Promise<LessonDetail | null> 
       .select('*')
       .eq('lesson_id', lessonId)
       .order('created_at', { ascending: true }),
+    supabase.from('lessons').select('*').eq('rescheduled_from', lessonId),
   ])
   if (notes.error) fail(notes.error, 'Não foi possível carregar o registro da aula.')
   if (materials.error) fail(materials.error, 'Não foi possível carregar os materiais.')
-  return { lesson, note: notes.data, materials: materials.data }
+  if (makeups.error) fail(makeups.error, 'Não foi possível carregar a reposição.')
+  return {
+    lesson,
+    note: notes.data,
+    materials: materials.data,
+    makeup: findMakeup(lessonId, makeups.data),
+  }
 }
 
 /** Registros visíveis (resumo/tarefa) de várias aulas, indexados pelo id da aula. */

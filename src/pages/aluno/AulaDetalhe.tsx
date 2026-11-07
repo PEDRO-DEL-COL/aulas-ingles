@@ -14,7 +14,7 @@ import {
 } from '@/features/shared/components/StateViews'
 import { LessonStatusBadge } from '@/features/aluno/components/StatusBadges'
 import { MaterialItem } from '@/features/aluno/components/MaterialItem'
-import { formatDateTimeLong } from '@/features/shared/datetime'
+import { formatDateTime, formatDateTimeLong } from '@/features/shared/datetime'
 import { makeupText } from '@/features/aluno/lessons'
 
 function TextBlock({ title, text }: { title: string; text: string }) {
@@ -59,10 +59,17 @@ export default function AulaDetalhe() {
               <LessonStatusBadge status={data.lesson.status} />
               <span>{data.lesson.duration_minutes} minutos</span>
             </div>
-            {makeupText(data.lesson) ? (
-              <p className="text-sm">{makeupText(data.lesson)}</p>
+            {makeupText(data.lesson, data.makeup, (iso) =>
+              formatDateTime(iso, timezone),
+            ) ? (
+              <p className="text-sm">
+                {makeupText(data.lesson, data.makeup, (iso) =>
+                  formatDateTime(iso, timezone),
+                )}
+              </p>
             ) : null}
-            {data.lesson.cancel_reason ? (
+            {data.lesson.cancel_reason &&
+            data.lesson.status !== 'cancelada_professora' ? (
               <p className="text-sm text-muted-foreground">
                 Motivo do cancelamento: {data.lesson.cancel_reason}
               </p>
