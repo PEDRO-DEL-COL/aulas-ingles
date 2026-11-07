@@ -13,6 +13,7 @@ SQL versionado do projeto. Nunca altere tabelas só pelo painel; crie uma nova m
 7. `20261108000003_rls_roles.sql`: papéis nas policies (escrita em `settings`/`plans`, alteração e exclusão de `profiles`, exclusão de `students` = só admin; professora edita o resto); remove policies de responsável.
 8. `20261108000004_cancellation_policy.sql`: política de cancelamento e reposição (colunas, triggers e RPCs).
 9. `20261109000001_admin_area.sql`: proteção de admins (trigger `profiles_guard_admin`: o admin não rebaixa/desativa a si mesmo pelo app; nunca fica sem admin ativo, de qualquer origem; o app não atribui `responsavel`), normalização de `settings` (vazio vira `NULL`, WhatsApp só dígitos) e checks `settings_whatsapp_format_chk`, `settings_pix_complete_chk`, `settings_policy_limits_chk`, `plans_billing_fields_chk`.
+10. `20261110000001_invoices_finance.sql`: financeiro — desfazer pagamento limpa `paid_at`/`confirmed_by`; `atrasado` nunca é gravado (vira `em_aberto`; é derivado na view); check `invoices_billing_fields_chk` (mensalidade exige `reference_month`, pacote exige `lessons_count`); índice dos avisos de "já paguei".
 
 As migrations 1 a 8 já foram aplicadas no projeto remoto: não edite; mudanças vão em arquivos novos com timestamp maior (`supabase migration new nome`). Todas são idempotentes.
 

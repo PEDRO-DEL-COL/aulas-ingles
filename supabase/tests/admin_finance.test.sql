@@ -1,10 +1,10 @@
--- pgTAP: area do admin (protecao de admins, settings, plans).
--- Migration 20261109000001_admin_area.
+-- pgTAP: area do admin (protecao de admins, settings, plans) e financeiro (invoices).
+-- Migrations 20261109000001_admin_area e 20261110000001_invoices_finance.
 -- Roda numa transacao com ROLLBACK.
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(28);
+select plan(34);
 
 create function pg_temp.as_user(p_uid uuid) returns void language plpgsql as $$
 begin
@@ -107,6 +107,25 @@ select throws_ok($$insert into public.plans (name, billing_model, price_cents) v
 select lives_ok($$insert into public.plans (name, billing_model, lessons_in_package, price_cents) values ('Pacote 8', 'pacote', 8, 80000)$$,
                 'admin cria pacote');
 reset role;
+
+-- ================================================================== invoices
+select pg_temp.as_user('d1000000-0000-0000-0000-0000000000d1');
+select throws_ok($$insert into public.invoices (student_id, billing_model, amount_cents, due_date) values ('a0000000-0000-0000-0000-00000000000a', 'mensalidade', 20000, '2027-03-10')$$,
+                 '23514', null, 'mensalidade sem mes de referencia e rejeitada');
+select lives_ok($$insert into public.invoices (id, student_id, billing_model, reference_month, amount_cents, due_date)
+                  values ('22222222-0000-0000-0000-0000000000a1', 'a0000000-0000-0000-0000-00000000000a', 'mensalidade', '2027-03-01', 20000, '2027-03-10')$$,
+                'professora lanca mensalidade');
+select throws_ok($$insert into public.invoices (student_id, billing_model, reference_month, amount_cents, due_date)
+                  values ('a0000000-0000-0000-0000-00000000000a', 'mensalidade', '2027-03-01', 20000, '2027-03-10')$$,
+                 '23505', null, 'segunda mensalidade do mesmo mes e rejeitada');
+select lives_ok($$update public.invoices set status = 'pago' where id = '22222222-0000-0000-0000-0000000000a1'$$,
+                'professora marca como pago');
+select lives_ok($$update public.invoices set status = 'em_aberto' where id = '22222222-0000-0000-0000-0000000000a1'$$,
+                'professora desfaz o pagamento');
+reset role;
+select is((select paid_at is null and confirmed_by is null from public.invoices
+           where id = '22222222-0000-0000-0000-0000000000a1'), true,
+          'desfazer pagamento limpa paid_at e confirmed_by');
 
 select * from finish();
 rollback;
