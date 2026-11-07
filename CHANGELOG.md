@@ -6,6 +6,13 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.12.0] - 2026-11-07
+
+### Adicionado
+
+- Migration `20261114000001_monthly_invoices_batch.sql`: RPC `generate_monthly_invoices` (só professora/admin) com prévia (`p_dry_run`) e geração idempotente das mensalidades do mês a partir do plano de cada aluno ativo; pula quem já tem a mensalidade do mês, sem plano, plano inativo e planos de pacote/avulsa; testes pgTAP `monthly_invoices.test.sql`.
+- Financeiro: "Gerar mensalidades do mês" com mês de referência, dia de vencimento (lembrado no navegador), prévia agrupada com total e confirmação.
+
 ## [0.11.0] - 2026-11-07
 
 ### Adicionado
