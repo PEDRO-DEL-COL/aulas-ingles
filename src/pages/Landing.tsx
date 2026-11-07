@@ -1,20 +1,38 @@
-import { Link } from 'react-router'
-
-import { Button } from '@/components/ui/button'
+import { About } from '@/components/landing/About'
+import { Faq } from '@/components/landing/Faq'
+import { FinalCta } from '@/components/landing/FinalCta'
+import { Hero } from '@/components/landing/Hero'
+import { HowItWorks } from '@/components/landing/HowItWorks'
+import { Plans } from '@/components/landing/Plans'
+import { SiteFooter } from '@/components/landing/SiteFooter'
+import { SiteHeader } from '@/components/landing/SiteHeader'
+import { Testimonials } from '@/components/landing/Testimonials'
+import { WhatsAppFloat } from '@/components/landing/WhatsAppFloat'
+import { brand } from '@/config/brand'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 export default function Landing() {
+  useDocumentTitle(undefined, brand.description)
   return (
-    <main className="mx-auto flex min-h-svh max-w-3xl flex-col items-start justify-center gap-4 p-6">
-      <h1 className="text-4xl font-bold">Inglês com [Nome]</h1>
-      <p className="text-muted-foreground">Aulas particulares de inglês online.</p>
-      <div className="flex flex-wrap gap-3">
-        <Button asChild>
-          <Link to="/login">Entrar</Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link to="/privacidade">Privacidade</Link>
-        </Button>
-      </div>
-    </main>
+    <>
+      <a
+        href="#conteudo"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+      >
+        Pular para o conteúdo
+      </a>
+      <SiteHeader />
+      <main id="conteudo">
+        <Hero />
+        <About />
+        <HowItWorks />
+        <Plans />
+        <Testimonials />
+        <Faq />
+        <FinalCta />
+      </main>
+      <SiteFooter />
+      <WhatsAppFloat />
+    </>
   )
 }
