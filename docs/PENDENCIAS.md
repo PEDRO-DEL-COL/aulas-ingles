@@ -94,3 +94,10 @@ Para o backup semanal e a consulta contra a pausa do Supabase vou precisar que v
 5. **Nome do negócio e da professora, foto, textos e preços reais**, e o subdomínio desejado em `pages.dev`.
 6. **Chave Pix** (tipo, nome e cidade do recebedor) quando existir.
 7. **Revisão jurídica** do texto de Privacidade e Termos.
+
+## 9. O que ainda falta construir
+
+- Área da professora: **Financeiro** (lançar cobrança, marcar pago, em aberto/atrasados, avisos de "Já paguei"), **Materiais** gerais, **Férias e feriados** (`blocked_dates`) e **Interessados** (Fase 2).
+- Área do admin: usuários e papéis, planos e valores, políticas (cancelamento, reposição, Pix) e backup/exportação.
+- GitHub Actions (consulta contra a pausa e backup) e deploy no Cloudflare Pages — dependem das contas e segredos acima.
+- Validar todas as migrations e os testes pgTAP num Supabase local (`supabase start` + `supabase test db`) e testar o fluxo completo com 2 ou 3 alunos reais.
