@@ -92,12 +92,29 @@ Para o backup semanal e a consulta contra a pausa do Supabase vou precisar que v
 3. **Faixa intermediária de cancelamento:** se ligada, cancelamentos entre X h e 24 h ficam "a critério da professora". Querem usar? Com qual X?
 4. **Reposição de reposição:** se o aluno cancelar uma reposição com ≥ 24h, ganha nova reposição (contando no limite). Ok?
 5. **Nome do negócio e da professora, foto, textos e preços reais**, e o subdomínio desejado em `pages.dev`.
-6. **Chave Pix** (tipo, nome e cidade do recebedor) quando existir.
+6. **Chave Pix** (tipo, nome e cidade do recebedor) quando existir — agora o admin cadastra em **Admin > Pix e contato**.
 7. **Revisão jurídica** do texto de Privacidade e Termos.
 
-## 9. O que ainda falta construir
+## 9. Migrations a aplicar no Supabase remoto (v0.8.0 a v0.9.1)
 
-- Área da professora: **Financeiro** (lançar cobrança, marcar pago, em aberto/atrasados, avisos de "Já paguei"), **Materiais** gerais, **Férias e feriados** (`blocked_dates`) e **Interessados** (Fase 2).
-- Área do admin: usuários e papéis, planos e valores, políticas (cancelamento, reposição, Pix) e backup/exportação.
+Aplicar **nesta ordem** (`supabase db push` aplica as pendentes em ordem):
+
+1. `20261109000001_admin_area.sql` — proteção de admins (não se rebaixa/desativa; nunca fica sem admin ativo), normalização e checks de `settings` (Pix vazio ou completo, WhatsApp só dígitos, limites da política) e de `plans`.
+2. `20261110000001_invoices_finance.sql` — desfazer pagamento limpa `paid_at`/`confirmed_by`; `atrasado` nunca gravado; mensalidade exige mês, pacote exige quantidade de aulas.
+3. `20261111000001_pix_txid_limit.sql` — `pix_txid` limitado a 25 alfanuméricos.
+
+Atenção: depois da 1ª, **excluir o login do último admin ativo** (Authentication > Users) passa a ser bloqueado pelo banco; promova outro admin antes. Os checks novos de `plans`, `invoices` e parte de `settings` são `NOT VALID` (não travam por dados antigos, mas valem para inserções e edições). Os testes pgTAP (`supabase/tests/admin_finance.test.sql` e ajustes em `rls.test.sql`) ainda não foram executados (sem Docker).
+
+## 10. Perguntas novas (v0.8–v0.9)
+
+1. **WhatsApp da professora** (`settings.whatsapp_number`, editável pelo admin): hoje só é guardado. Querem que a landing e a área do aluno usem esse número em vez do `VITE_WHATSAPP_NUMBER` do build?
+2. **Planos da landing**: a landing ainda mostra os planos de `src/config/brand.ts`. Querem que ela leia os planos ativos do banco (tela Planos e valores)?
+3. **Feriados com aulas já geradas**: hoje a tela só avisa quantas aulas existem no período; a professora cancela na Agenda. Preferem cancelamento automático (como "cancelada pela professora", com direito a reposição)?
+4. **Mensalidades do mês em lote** (gerar as cobranças de todos os alunos a partir do plano) — é a próxima prioridade do financeiro?
+
+## 11. O que ainda falta construir
+
+- Interessados (leads da landing, Fase 2), backup/exportação (admin) e mensalidades geradas em lote.
 - GitHub Actions (consulta contra a pausa e backup) e deploy no Cloudflare Pages — dependem das contas e segredos acima.
 - Validar todas as migrations e os testes pgTAP num Supabase local (`supabase start` + `supabase test db`) e testar o fluxo completo com 2 ou 3 alunos reais.
+- Regenerar `src/types/database.ts` a partir do banco (hoje escrito à mão; ver `supabase/README.md`).
