@@ -6,6 +6,19 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.6.0] - 2026-11-07
+
+### Adicionado
+
+- Área do aluno: Início (próxima aula, contagem regressiva, botão "Entrar na aula" a partir de 15 min antes), Agenda com cancelamento (prévia da regra e resultado real do banco), Histórico e detalhe da aula, Materiais, Financeiro (só as próprias cobranças, "Já paguei"), Pagar via Pix (QR Code e copia e cola; "Pix ainda não configurado" sem chave) e Meu perfil.
+- Datas guardadas em UTC e exibidas no fuso do perfil.
+- Componentes de UI (card, badge, alert, skeleton, campos, diálogo) e hook de dados simples, sem bibliotecas extras.
+- Dependências: `date-fns` e `qrcode.react` (carregado só na tela do Pix).
+
+### Corrigido
+
+- `refreshProfile` não desmonta mais a tela enquanto recarrega o perfil.
+
 ## [0.5.0] - 2026-11-07
 
 ### Adicionado
@@ -65,7 +78,8 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 - ESLint (type-aware), Prettier, Vitest e scripts `dev`, `build`, `lint`, `typecheck`, `test`, `format`.
 - `.env.example`, `_redirects` para SPA no Cloudflare Pages, README em pt-BR, `CLAUDE.md` e briefing do projeto.
 
-[Não publicado]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.5.0...HEAD
+[Não publicado]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.2.0...v0.3.0
