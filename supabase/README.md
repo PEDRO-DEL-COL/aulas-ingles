@@ -6,10 +6,50 @@ SQL versionado do projeto. Nunca altere tabelas só pelo painel; crie uma nova m
 
 1. `20261107000001_enums.sql`: tipos enumerados.
 2. `20261107000002_tables.sql`: tabelas, índices, checks, view `invoices_with_status`, linha singleton de `settings`.
-3. `20261107000003_functions_triggers.sql`: `updated_at`, normalização de e-mail, helpers de acesso (`is_staff`, `can_view_student`...), trigger do primeiro login (`handle_new_user`), ligação aluno/responsável por e-mail (também quando a ficha é criada depois do login), proteção contra auto-promoção de papel, RPCs (`mark_invoice_as_paid_notice`, `accept_terms`, `generate_lessons`).
+3. `20261107000003_functions_triggers.sql`: `updated_at`, normalização de e-mail, helpers de acesso, trigger do primeiro login, proteção contra auto-promoção de papel, RPCs (`mark_invoice_as_paid_notice`, `accept_terms`, `generate_lessons`).
 4. `20261107000004_rls.sql`: RLS em todas as tabelas, policies por comando e revogação de privilégios.
+5. `20261108000001_lesson_status_cancelada_aluno.sql`: novo valor `cancelada_aluno` do enum `lesson_status` (sozinho de propósito: valor de enum só pode ser usado após o commit).
+6. `20261108000002_access_model.sql`: perfis de login = aluno, professora, admin (responsável sai do login); `link_profile_access` liga só `students`; remove o trigger de responsável; `accept_terms` sem consentimento de responsável; "já paguei" só do próprio aluno; colunas de consentimento do menor; check de formato de e-mail dos alunos; defaults de fuso.
+7. `20261108000003_rls_roles.sql`: papéis nas policies (escrita em `settings`/`plans`, alteração e exclusão de `profiles`, exclusão de `students` = só admin; professora edita o resto); remove policies de responsável.
+8. `20261108000004_cancellation_policy.sql`: política de cancelamento e reposição (colunas, triggers e RPCs).
 
-Todas são idempotentes. Para mudanças futuras, crie arquivos novos com timestamp maior (`supabase migration new nome`).
+As migrations 1 a 4 já foram publicadas (v0.3.0): não edite; mudanças vão em arquivos novos com timestamp maior (`supabase migration new nome`). Todas são idempotentes.
+
+## Papéis
+
+| Papel      | Pode                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| aluno      | Ler só o que é dele: ficha, aulas, registros de aula, materiais, cobranças (`invoices` e `invoices_with_status`, somente leitura), `settings` (chave Pix), `plans`, `blocked_dates`. "Já paguei" (`mark_invoice_as_paid_notice`) só nas próprias cobranças. Cancelar a própria aula só pela RPC `cancel_lesson`. Não vê `payers`, `student_guardians`, `private_notes`, `leads`. Atualiza o próprio nome/telefone/fuso. |
+| professora | Lê e edita `students`, `student_guardians`, `payers`, `schedules`, `lessons`, `lesson_notes`, `private_notes`, `materials`, `invoices` (lançar, marcar pago), `blocked_dates`, `leads`. Lê `plans`, `settings` e `profiles`. Não escreve `settings`/`plans`, não altera perfis de outras pessoas, não exclui fichas (usa `students.status = 'saiu'`) nem contas.                                                        |
+| admin      | Tudo da professora + escreve `settings` e `plans`, altera `role`/`active` de `profiles`, exclui `students` e `profiles` (não a si mesmo).                                                                                                                                                                                                                                                                               |
+
+**Responsável não é perfil de login nesta fase.** `student_guardians` e `payers` são dados da ficha, geridos pela professora; ninguém entra com eles. O valor `responsavel` do enum `user_role` continua existindo (não dá para remover valor de enum com segurança) mas não concede nada; quem só tem e-mail em `student_guardians` fica com o profile inativo. O consentimento do menor é registrado pela professora na ficha (`students.consent_by_guardian_at`, `guardian_consent_name`, `guardian_consent_notes`).
+
+**Excluir conta:** o `DELETE` em `profiles` (admin) remove só o perfil; a conta em `auth.users` continua e a pessoa vê "acesso não liberado" se logar. Excluir de verdade é pelo painel do Supabase (Authentication > Users).
+
+**Aulas só individuais:** `lessons.student_id` é obrigatório e único por aula.
+
+**E-mail do aluno:** `students.email` deve ser o de uma conta Google (Gmail ou Conta Google criada com outro e-mail). O banco só valida o formato; a professora confere ao cadastrar. Fuso padrão: `America/Sao_Paulo` (`profiles.timezone`, `schedules.timezone`).
+
+**Pix:** `settings.pix_key` e afins podem ser `null` (ainda não existe); o front trata `null`.
+
+## Cancelamento e reposição (aplicado no banco)
+
+Configuração em `settings` (só admin edita): `cancellation_min_hours` (padrão 24), `late_cancel_band_enabled` (padrão false), `late_cancel_band_min_hours` (padrão 12; deve ser menor que `cancellation_min_hours` quando a faixa está ligada), `max_makeups_per_month` (padrão 2).
+
+Trigger `lessons_cancellation_rules` (o valor de `makeup_eligible` enviado pelo cliente é sempre ignorado):
+
+- `cancelada_aluno`: antecedência (`starts_at - canceled_at`) >= `cancellation_min_hours` => `makeup_eligible = true` (exatamente igual ao mínimo conta como "com"). Faixa ligada e antecedência >= `late_cancel_band_min_hours` => `NULL` (a professora decide por `decide_makeup`). Senão `false`. Aula que já começou => erro. Só aula `agendada`/`reposicao` pode ser cancelada.
+- `falta_aluno`: `makeup_eligible = false`, sempre.
+- `cancelada_professora`: `makeup_eligible = true`, sempre.
+- `canceled_at` é `now()` (staff pode informar um horário passado ao registrar retroativamente). Voltar a aula para agendada/realizada limpa os campos (bloqueado se já existir reposição dela).
+- `makeup_eligible` só muda depois pela RPC `decide_makeup` (e só quando está `NULL`); qualquer outra alteração manual dá erro `42501`.
+
+Trigger `lessons_makeup_rules` (reposição = `status 'reposicao'` com `rescheduled_from`):
+
+- `reposicao` sem `rescheduled_from` => erro. A origem deve ser do mesmo aluno, ter `makeup_eligible = true` e ainda não ter reposição (índice único parcial `lessons_rescheduled_from_key`).
+- Limite `max_makeups_per_month` por aluno no **mês civil da data da reposição** (`starts_at`, fuso `America/Sao_Paulo` fixo no código), não o mês da aula cancelada. Não contam para o limite: reposição cancelada pela professora e reposição cancelada pelo aluno com direito a nova reposição. Se uma reposição for cancelada com direito, ela própria vira origem da próxima (encadeamento).
+- O limite não tem exceção por staff; para liberar mais, o admin sobe `max_makeups_per_month`.
 
 ## Aplicar
 
@@ -40,16 +80,28 @@ Detalhes em `seed.sql`. Os demais papéis são trocados por um admin.
 
 ## Fluxo de liberação
 
-A professora cadastra o aluno em `students` (e responsáveis em `student_guardians`) com o e-mail Google. No primeiro login, `handle_new_user` liga o login à ficha e ativa o acesso. Se o e-mail não estiver cadastrado, o profile fica `active = false` e as policies negam tudo (o app mostra "acesso não liberado"). Se a ficha for criada depois do login, os triggers de `students`/`student_guardians` fazem a ligação na hora.
+A professora cadastra o aluno em `students` com o e-mail da conta Google dele. No primeiro login, `handle_new_user` liga o login à ficha (só se o e-mail estiver confirmado em `auth.users`) e ativa o acesso como `aluno`. Se o e-mail não estiver cadastrado, o profile fica `active = false` e as policies negam tudo (o app mostra "acesso não liberado"). Se a ficha for criada depois do login, o trigger de `students` faz a ligação na hora.
+
+## Funções que o front chama (`supabase.rpc`)
+
+| Função                                                                                              | Quem                                                                                                                   | Retorno                                                                                         |
+| --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `cancel_lesson(p_lesson_id uuid, p_reason text default null, p_by_teacher boolean default false)`   | aluno dono da aula; staff (`p_by_teacher = true` => `cancelada_professora`; `false` => registra cancelamento do aluno) | linha de `lessons`; ver `makeup_eligible` (true = com reposição, false = sem, null = a decidir) |
+| `decide_makeup(p_lesson_id uuid, p_eligible boolean)`                                               | staff                                                                                                                  | linha de `lessons`                                                                              |
+| `schedule_makeup(p_original_lesson uuid, p_starts_at timestamptz, p_duration integer default null)` | staff                                                                                                                  | linha de `lessons` (nova reposição)                                                             |
+| `makeups_used_in_month(p_student uuid, p_month date)`                                               | quem pode ver o aluno (ele mesmo ou staff)                                                                             | integer                                                                                         |
+| `mark_invoice_as_paid_notice(p_invoice_id uuid)`                                                    | só o próprio aluno                                                                                                     | void                                                                                            |
+| `accept_terms(p_version text)`                                                                      | usuário ativo                                                                                                          | void                                                                                            |
+| `generate_lessons(p_from date, p_to date)`                                                          | staff                                                                                                                  | integer                                                                                         |
 
 ## Pontos de atenção para o front
 
 - `leads`: o formulário público deve usar `.insert(...)` **sem** `.select()` (anon só tem INSERT).
-- "Já paguei": `supabase.rpc('mark_invoice_as_paid_notice', { p_invoice_id })`. Aceite de termos: `rpc('accept_terms', { p_version })`.
+- Aluno não faz UPDATE em `lessons`; cancelamento só por `cancel_lesson`.
 - Inadimplência: consulte `invoices_with_status` e use `effective_status`.
 - Mensalidades: valores em centavos, `reference_month` no dia 1.
 - Aulas recorrentes: `rpc('generate_lessons', { p_from, p_to })` (só staff, máx. 366 dias, pula `blocked_dates`).
 - Tabelas novas: o Supabase concede privilégios amplos por padrão; sempre habilite RLS e revogue de `anon`/`authenticated` o que não for usado.
 - Config: `config.toml` foi escrito à mão (a CLI não estava instalada). Se rodar `supabase init`, mescle. Para Google, defina `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` e `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET` e ponha `enabled = true`.
 
-Testes de RLS: ver `tests/README.md`.
+Testes: ver `tests/README.md`.
