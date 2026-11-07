@@ -6,6 +6,18 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.10.0] - 2026-11-07
+
+### Adicionado
+
+- Migration `20261112000001_public_site_info.sql`: RPC pública `public_site_info()` com exposição mínima (só o WhatsApp da professora e os planos ativos), sem abrir `settings`/`plans` ao visitante; testes pgTAP `public_site_info.test.sql`.
+- Landing lê o WhatsApp e os planos ativos do banco por um `fetch` REST simples (sem supabase-js na landing), com estado inicial imediato (cache local ou fallback) e troca silenciosa quando os dados chegam.
+- Privacidade e "Acesso não liberado" usam o mesmo WhatsApp; cartão "Falar com a professora" no perfil do aluno (WhatsApp de `settings`).
+
+### Alterado
+
+- `VITE_WHATSAPP_NUMBER` e os planos de `src/config/brand.ts` viram apenas fallback (banco indisponível, não configurado ou vazio).
+
 ## [0.9.1] - 2026-11-07
 
 ### Corrigido
