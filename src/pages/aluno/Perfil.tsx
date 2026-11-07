@@ -8,10 +8,12 @@ import { Input, Label, Select } from '@/components/ui/field'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuth } from '@/lib/auth/useAuth'
 import { useQuery } from '@/lib/data/useQuery'
-import { getPlan, updateMyProfile } from '@/features/aluno/api'
+import { getPlan, getSettings, updateMyProfile } from '@/features/aluno/api'
 import { useAluno } from '@/features/aluno/AlunoContext'
 import { PageHeader } from '@/features/shared/components/StateViews'
+import { brand } from '@/config/brand'
 import { formatBRL } from '@/lib/format'
+import { buildWhatsAppLink } from '@/lib/whatsapp'
 import {
   formatDateTime,
   safeTimezone,
@@ -46,6 +48,15 @@ export default function Perfil() {
   const plan = useQuery(`plano:${student.plan_id ?? 'nenhum'}`, async () =>
     student.plan_id ? getPlan(student.plan_id) : null,
   )
+
+  const settings = useQuery('settings:perfil', getSettings)
+  const whatsappNumber = settings.data?.whatsapp_number || brand.whatsapp.number
+  const whatsappLink = whatsappNumber
+    ? buildWhatsAppLink(
+        whatsappNumber,
+        `Olá! Sou aluno(a) e gostaria de falar com você. (${profile?.full_name ?? ''})`,
+      )
+    : null
 
   const [phone, setPhone] = useState(profile?.phone ?? '')
   const [tz, setTz] = useState(timezone)
@@ -152,6 +163,21 @@ export default function Perfil() {
           </div>
         </dl>
       </Card>
+
+      {whatsappLink ? (
+        <Card>
+          <CardTitle>Falar com a professora</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Dúvidas ou recados? Chame a professora no WhatsApp.
+          </p>
+          <Button asChild className="self-start">
+            <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+              Abrir WhatsApp
+              <span className="sr-only"> (abre em nova aba)</span>
+            </a>
+          </Button>
+        </Card>
+      ) : null}
 
       <Card>
         <CardTitle>Termos e privacidade</CardTitle>
