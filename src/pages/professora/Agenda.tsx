@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Label, Select } from '@/components/ui/field'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   generateLessons,
@@ -11,11 +12,22 @@ import {
 } from '@/features/professora/api'
 import { LessonActionsDialog } from '@/features/professora/components/LessonActionsDialog'
 import { TeacherStatusBadge } from '@/features/professora/components/TeacherStatusBadge'
+import {
+  GENERATION_OPTIONS,
+  generationMessage,
+  generationRange,
+  type GenerationScope,
+} from '@/features/professora/generation'
 import { groupByDay, type LessonWithStudent } from '@/features/professora/lessons'
 import { addDaysKey, rangeUtc, weekDayKeys, weekStartKey } from '@/features/professora/tz'
 import { useTimezone } from '@/features/professora/useTimezone'
 import { EmptyState, ErrorState } from '@/features/shared/components/StateViews'
-import { formatDateOnly, formatDayLong, formatTime } from '@/features/shared/datetime'
+import {
+  dayKey,
+  formatDateOnly,
+  formatDayLong,
+  formatTime,
+} from '@/features/shared/datetime'
 import { friendlyError } from '@/features/shared/errors'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useQuery } from '@/lib/data/useQuery'
@@ -26,6 +38,7 @@ export default function Agenda() {
   const [startKey, setStartKey] = useState(() => weekStartKey(new Date(), timezone))
   const [selected, setSelected] = useState<LessonWithStudent | null>(null)
   const [generating, setGenerating] = useState(false)
+  const [scope, setScope] = useState<GenerationScope>('4')
   const [genMessage, setGenMessage] = useState<{ ok: boolean; text: string } | null>(null)
 
   const endKey = addDaysKey(startKey, 6)
@@ -45,14 +58,9 @@ export default function Agenda() {
     setGenerating(true)
     setGenMessage(null)
     try {
-      const n = await generateLessons(startKey, endKey)
-      setGenMessage({
-        ok: true,
-        text:
-          n === 0
-            ? 'Nenhuma aula nova: os horários fixos já estavam gerados para esta semana.'
-            : `${n} ${n === 1 ? 'aula criada' : 'aulas criadas'} para esta semana.`,
-      })
+      const { from, to } = generationRange(scope, startKey, dayKey(new Date(), timezone))
+      const n = await generateLessons(from, to)
+      setGenMessage({ ok: true, text: generationMessage(scope, n) })
       week.refetch()
     } catch (e) {
       setGenMessage({ ok: false, text: friendlyError(e) })
@@ -93,15 +101,36 @@ export default function Agenda() {
       </div>
 
       <div className="space-y-2">
-        <Button
-          variant="secondary"
-          disabled={generating}
-          onClick={() => void generate()}
-          className="w-full sm:w-auto"
-        >
-          <RefreshCw aria-hidden="true" className={generating ? 'animate-spin' : ''} />
-          {generating ? 'Gerando…' : 'Gerar aulas recorrentes desta semana'}
-        </Button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div className="space-y-1.5">
+            <Label htmlFor="gerar-intervalo">Gerar aulas recorrentes</Label>
+            <Select
+              id="gerar-intervalo"
+              value={scope}
+              onChange={(e) => setScope(e.target.value as GenerationScope)}
+              className="sm:w-56"
+            >
+              {GENERATION_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <Button
+            variant="secondary"
+            disabled={generating}
+            onClick={() => void generate()}
+            className="w-full sm:w-auto"
+          >
+            <RefreshCw aria-hidden="true" className={generating ? 'animate-spin' : ''} />
+            {generating ? 'Gerando…' : 'Gerar aulas'}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Usa os horários fixos dos alunos ativos e pula férias e feriados. Aulas já
+          existentes não são duplicadas.
+        </p>
         {genMessage ? (
           <Alert variant={genMessage.ok ? 'success' : 'destructive'}>
             {genMessage.text}
