@@ -43,17 +43,26 @@ npm run dev
 ## Estrutura de pastas
 
 ```
+docs/                pendências e decisões em aberto (PENDENCIAS.md)
 public/              arquivos estáticos (favicon, _redirects do Cloudflare Pages)
 src/
   components/
+    landing/         seções da landing page
     layout/          layouts (RootLayout)
     ui/              componentes shadcn/ui
-  lib/               utilitários (cn etc.)
+  config/brand.ts    nome, cores e conteúdo da marca (fonte única)
+  hooks/             hooks React
+  lib/               utilitários: supabase.ts, pix.ts (BR Code), whatsapp.ts
   pages/             páginas por rota (carregadas com lazy)
     app/             áreas logadas: aluno, professora, admin
   router.tsx         definição das rotas
   main.tsx           ponto de entrada
+supabase/
+  migrations/        SQL versionado (tabelas, funções, RLS)
+  tests/             testes pgTAP das políticas de RLS
 ```
+
+Banco de dados: veja [supabase/README.md](supabase/README.md). Para aplicar e testar as migrations é preciso a Supabase CLI e o Docker.
 
 ## Licença
 
