@@ -158,7 +158,7 @@ export function buildPixPayload(opts: PixPayloadOptions): string {
   }
 
   const txid = opts.txid ?? '***'
-  if (txid !== '***' && !/^[A-Za-z0-9]{1,25}$/.test(txid)) {
+  if (txid !== '***' && !isValidTxid(txid)) {
     throw new Error('txid inválido: use de 1 a 25 caracteres alfanuméricos.')
   }
 
@@ -174,6 +174,14 @@ export function buildPixPayload(opts: PixPayloadOptions): string {
     field('62', field('05', txid)) +
     '6304'
   return body + crc16ccitt(body)
+}
+
+/** Limite do txid no BR Code estático (campo 62-05). O banco usa o mesmo limite. */
+export const PIX_TXID_MAX = 25
+
+/** txid aceito pelo BR Code: 1 a 25 letras ou números (sem acento, espaço ou símbolo). */
+export function isValidTxid(value: string): boolean {
+  return /^[A-Za-z0-9]+$/.test(value) && value.length <= PIX_TXID_MAX
 }
 
 /**

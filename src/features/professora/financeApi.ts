@@ -1,6 +1,7 @@
 /** Dados do financeiro da professora. A segurança vem do RLS (staff). */
 import type { Invoice, InvoiceStatus } from '@/features/aluno/invoices'
 import { friendlyError } from '@/features/shared/errors'
+import { isValidTxid } from '@/lib/pix'
 import { getSupabase } from '@/lib/supabase'
 import type { TablesUpdate } from '@/types/database'
 
@@ -14,6 +15,13 @@ import type {
 
 function fail(error: unknown, fallback: string): never {
   throw new Error(friendlyError(error, fallback))
+}
+
+const TXID_ERROR = 'Identificador do Pix inválido: use até 25 letras ou números.'
+
+/** O banco também valida (invoices_pix_txid_chk); aqui a mensagem chega antes. */
+function assertTxid(txid: string | null | undefined): void {
+  if (txid != null && !isValidTxid(txid)) throw new Error(TXID_ERROR)
 }
 
 const STUDENT_COLS = 'id, full_name, phone, plan_id, default_payer_id'
@@ -85,6 +93,7 @@ export async function listInvoicesAdmin(
 }
 
 export async function createInvoice(insert: InvoiceInsert): Promise<void> {
+  assertTxid(insert.pix_txid)
   const { error } = await getSupabase().from('invoices').insert(insert)
   if (error) fail(error, 'Não foi possível criar a cobrança.')
 }
@@ -102,6 +111,7 @@ export async function updateInvoice(
   id: string,
   patch: TablesUpdate<'invoices'>,
 ): Promise<void> {
+  assertTxid(patch.pix_txid)
   const { error } = await getSupabase().from('invoices').update(patch).eq('id', id)
   if (error) fail(error, 'Não foi possível salvar a cobrança.')
 }

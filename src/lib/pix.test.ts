@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { buildPixPayload, buildTxid, crc16ccitt, normalizePixKey } from './pix'
+import {
+  buildPixPayload,
+  buildTxid,
+  crc16ccitt,
+  isValidTxid,
+  normalizePixKey,
+  PIX_TXID_MAX,
+} from './pix'
 
 function parseTlv(s: string): Map<string, string> {
   const out = new Map<string, string>()
@@ -126,5 +133,27 @@ describe('buildTxid', () => {
     expect(buildTxid(UUID)).toBe('123e4567e12b12d1a45642665')
     expect(() => buildTxid('---')).toThrow('Id')
     expect(() => buildTxid(UUID, 'a-b')).toThrow('Referência')
+  })
+})
+
+describe('isValidTxid', () => {
+  it('aceita de 1 a 25 alfanuméricos', () => {
+    expect(PIX_TXID_MAX).toBe(25)
+    expect(isValidTxid('A')).toBe(true)
+    expect(isValidTxid('a'.repeat(25))).toBe(true)
+  })
+
+  it('rejeita vazio, mais de 25 (o banco antigo aceitava 35) e símbolos', () => {
+    expect(isValidTxid('')).toBe(false)
+    expect(isValidTxid('a'.repeat(26))).toBe(false)
+    expect(isValidTxid('a'.repeat(35))).toBe(false)
+    expect(isValidTxid('abc-123')).toBe(false)
+    expect(isValidTxid('ação')).toBe(false)
+  })
+
+  it('buildTxid sempre produz um txid válido', () => {
+    expect(isValidTxid(buildTxid('6f1c0d2e-4b5a-4e3f-9a8b-1c2d3e4f5a6b', '202611'))).toBe(
+      true,
+    )
   })
 })

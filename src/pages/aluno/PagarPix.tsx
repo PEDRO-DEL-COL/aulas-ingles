@@ -10,7 +10,7 @@ import { brand } from '@/config/brand'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { formatBRL } from '@/lib/format'
 import { useQuery } from '@/lib/data/useQuery'
-import { buildPixPayload, buildTxid, normalizePixKey } from '@/lib/pix'
+import { buildPixPayload, buildTxid, isValidTxid, normalizePixKey } from '@/lib/pix'
 import { buildWhatsAppLink } from '@/lib/whatsapp'
 import { listInvoices } from '@/features/aluno/api'
 import { useAluno } from '@/features/aluno/AlunoContext'
@@ -44,12 +44,14 @@ function buildPix(
       receiverName: settings.receiver_name ?? '',
       receiverCity: settings.receiver_city ?? '',
       amount: invoice.amount_cents / 100,
+      // txid gravado só é usado se for válido (até 25 alfanuméricos); senão, gera um.
       txid:
-        invoice.pix_txid ??
-        buildTxid(
-          student.id,
-          referenceYYYYMM(invoice.reference_month ?? invoice.due_date),
-        ),
+        invoice.pix_txid && isValidTxid(invoice.pix_txid)
+          ? invoice.pix_txid
+          : buildTxid(
+              student.id,
+              referenceYYYYMM(invoice.reference_month ?? invoice.due_date),
+            ),
     })
     return { payload }
   } catch (e) {
