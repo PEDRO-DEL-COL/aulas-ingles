@@ -1,0 +1,43 @@
+# Config mínima escrita à mão (a Supabase CLI não estava instalada).
+# Se rodar `supabase init` depois, mescle com o arquivo gerado (a CLI cria mais chaves).
+project_id = "aulas-ingles"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:5173"]
+jwt_expiry = 3600
+# Necessário para o login Google criar o usuário. O acesso real é controlado
+# por profiles.active (ver migrations), não por este flag.
+enable_signup = true
+
+[auth.email]
+# Sem login por e-mail/senha: só Google.
+enable_signup = false
+enable_confirmations = false
+
+[auth.external.google]
+enabled = false
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+skip_nonce_check = false
