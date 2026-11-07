@@ -6,6 +6,20 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.8.0] - 2026-11-07
+
+### Adicionado
+
+- Área do admin (`/app/admin`): Usuários e acessos (busca, filtro, ativar/desativar, trocar papel), Planos e valores (CRUD com os 3 modelos de cobrança), Políticas do negócio (prazo de cancelamento, faixa intermediária, máximo de reposições por mês, texto da política) e Pix e contato (chave, tipo, nome e cidade do recebedor, WhatsApp da professora; tudo pode ficar vazio, com prévia do código Pix).
+- Navegação do admin com acesso às telas da professora (e item "Admin" na navegação da professora para quem é admin).
+- Migration `20261109000001_admin_area.sql`: no banco, o admin não rebaixa/desativa a si mesmo e o sistema nunca fica sem admin ativo; o app não atribui o papel `responsavel`; `settings` normaliza vazios para `NULL` e valida WhatsApp, Pix completo e limites da política; `plans` exige aulas por mês (mensalidade) ou do pacote (pacote).
+- Testes pgTAP `admin_finance.test.sql` e mensagens amigáveis para os novos erros do banco.
+
+### Alterado
+
+- Navegação das áreas extraída para `AreaNav`.
+
+
 ## [0.7.0] - 2026-11-07
 
 ### Adicionado
