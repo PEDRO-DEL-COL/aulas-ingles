@@ -1,5 +1,6 @@
 import { ChevronDown } from 'lucide-react'
 
+import { Reveal } from '@/components/brand/Reveal'
 import { brand } from '@/config/brand'
 
 import { SectionHeading } from './SectionHeading'
@@ -15,10 +16,10 @@ export function Faq() {
         <SectionHeading id="titulo-faq" eyebrow="Perguntas frequentes">
           Ficou com dúvida?
         </SectionHeading>
-        <div className="divide-y rounded-2xl border bg-card">
+        <Reveal className="space-y-3">
           {brand.faq.map((item) => (
-            <details key={item.question} className="group">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-2xl p-5 text-lg font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/60 [&::-webkit-details-marker]:hidden">
+            <details key={item.question} className="group rounded-2xl bg-card shadow-sm">
+              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 rounded-2xl p-5 text-lg font-bold [&::-webkit-details-marker]:hidden">
                 {item.question}
                 <ChevronDown
                   className="size-5 shrink-0 text-primary transition-transform group-open:rotate-180 motion-reduce:transition-none"
@@ -28,7 +29,7 @@ export function Faq() {
               <p className="px-5 pb-5 text-muted-foreground">{item.answer}</p>
             </details>
           ))}
-        </div>
+        </Reveal>
       </div>
     </section>
   )

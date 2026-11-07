@@ -3,6 +3,7 @@ import type { ComponentProps, ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { brand } from '@/config/brand'
+import { cn } from '@/lib/utils'
 
 type Props = {
   children: ReactNode
@@ -16,7 +17,12 @@ export function WhatsAppCta({ children, variant, size, className }: Props) {
   const link = brand.whatsapp.link
   if (!link) return null
   return (
-    <Button asChild variant={variant} size={size} className={className}>
+    <Button
+      asChild
+      variant={variant}
+      size={size}
+      className={cn('rounded-full px-6 text-base font-bold', className)}
+    >
       <a href={link} target="_blank" rel="noopener noreferrer">
         <MessageCircle aria-hidden="true" />
         {children}

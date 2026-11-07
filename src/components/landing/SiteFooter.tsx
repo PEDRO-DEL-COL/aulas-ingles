@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 
+import { Logo } from '@/components/brand/Logo'
 import { brand } from '@/config/brand'
 
 const ext = { target: '_blank', rel: 'noopener noreferrer' } as const
@@ -8,10 +9,13 @@ const linkClass = 'underline underline-offset-4'
 export function SiteFooter() {
   const { social, whatsapp } = brand
   return (
-    <footer className="border-t bg-sand/60">
+    <footer className="border-t border-border/70 bg-lavender/60">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:px-6 md:flex-row md:items-start md:justify-between">
         <div>
-          <p className="font-serif text-lg font-semibold">{brand.name}</p>
+          <p className="flex items-center gap-2.5 text-lg font-extrabold">
+            <Logo size={28} decorative />
+            {brand.name}
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">
             © {new Date().getFullYear()} {brand.teacherName}. Todos os direitos
             reservados.

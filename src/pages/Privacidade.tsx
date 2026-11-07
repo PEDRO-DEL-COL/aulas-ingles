@@ -266,7 +266,7 @@ function Block({
 }) {
   return (
     <section id={id} aria-labelledby={`${id}-titulo`} className="scroll-mt-6">
-      <h2 id={`${id}-titulo`} className="font-serif text-3xl font-semibold">
+      <h2 id={`${id}-titulo`} className="text-3xl font-extrabold">
         {heading}
       </h2>
       {items.map((s) => (
@@ -310,7 +310,7 @@ export default function Privacidade() {
         </Link>
       </header>
       <main className="mt-6">
-        <h1 className="font-serif text-4xl leading-tight font-semibold">
+        <h1 className="text-4xl leading-tight font-extrabold">
           Política de Privacidade e Termos de Uso
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -320,10 +320,10 @@ export default function Privacidade() {
 
         <div
           role="note"
-          className="mt-6 flex gap-3 rounded-2xl border-2 border-coral-text bg-accent p-4 font-medium"
+          className="mt-6 flex gap-3 rounded-2xl border-2 border-peach-text bg-accent p-4 font-medium"
         >
           <TriangleAlert
-            className="mt-0.5 size-5 shrink-0 text-coral-text"
+            className="mt-0.5 size-5 shrink-0 text-peach-text"
             aria-hidden="true"
           />
           <p>

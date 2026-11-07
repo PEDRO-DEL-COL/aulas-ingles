@@ -1,64 +1,78 @@
 import { Check } from 'lucide-react'
 
-import { brand } from '@/config/brand'
+import { Reveal } from '@/components/brand/Reveal'
+import { brand, type Plan } from '@/config/brand'
 import { formatBRL } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 import { SectionHeading } from './SectionHeading'
 import { WhatsAppCta } from './WhatsAppCta'
 
+function priceSuffix(plan: Plan) {
+  if (plan.billing === 'monthly') return '/mês'
+  if (plan.billing === 'single') return '/aula'
+  return 'o pacote'
+}
+
+function lessonsPerk(plan: Plan) {
+  if (plan.billing === 'monthly') return `${plan.lessons} aulas por mês`
+  if (plan.billing === 'package') return `${plan.lessons} aulas no pacote`
+  return '1 aula'
+}
+
 export function Plans() {
   return (
     <section
       id="planos"
       aria-labelledby="titulo-planos"
-      className="scroll-mt-20 py-16 sm:py-24"
+      className="scroll-mt-20 py-20 sm:py-28"
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <SectionHeading id="titulo-planos" eyebrow="Planos">
-          Escolha o ritmo que combina com você
+          Escolha o jeito que combina com a sua rotina
         </SectionHeading>
         <ul className="grid gap-6 md:grid-cols-3">
-          {brand.plans.map((plan) => (
-            <li
+          {brand.plans.map((plan, i) => (
+            <Reveal
+              as="li"
               key={plan.id}
+              delay={i * 90}
               className={cn(
                 'relative flex flex-col rounded-3xl border bg-card p-7',
-                plan.highlight && 'border-primary shadow-lg ring-2 ring-primary/20',
+                plan.highlight && 'border-primary shadow-lg ring-4 ring-lavender',
               )}
             >
               {plan.highlight ? (
-                <span className="absolute -top-3 left-6 rounded-full bg-coral px-3 py-0.5 text-xs font-semibold text-foreground">
+                <span className="absolute -top-3.5 left-6 rounded-full bg-peach px-3.5 py-1 text-xs font-extrabold text-peach-text">
                   Mais escolhido
                 </span>
               ) : null}
-              <h3 className="font-serif text-2xl font-semibold">{plan.name}</h3>
+              <h3 className="text-2xl font-extrabold">{plan.name}</h3>
               <p className="mt-1 text-muted-foreground">{plan.description}</p>
-              <p className="mt-6 font-serif text-4xl font-semibold">
+              <p className="mt-6 text-4xl font-extrabold">
                 {plan.price === null ? 'A combinar' : formatBRL(plan.price)}
                 {plan.price !== null ? (
-                  <span className="text-base font-normal text-muted-foreground">
+                  <span className="text-base font-semibold text-muted-foreground">
                     {' '}
-                    /mês
+                    {priceSuffix(plan)}
                   </span>
                 ) : null}
               </p>
-              {plan.lessonsPerMonth > 0 ? (
-                <ul className="mt-5 space-y-2 text-sm">
-                  <li className="flex items-center gap-2">
-                    <Check className="size-4 text-primary" aria-hidden="true" />
-                    {plan.lessonsPerMonth} aulas por mês
+              <ul className="mt-5 space-y-2 text-sm">
+                {[
+                  lessonsPerk(plan),
+                  `${plan.durationMinutes} minutos cada, individuais`,
+                  ...plan.perks,
+                ].map((perk) => (
+                  <li key={perk} className="flex items-start gap-2">
+                    <Check
+                      className="mt-0.5 size-4 shrink-0 text-sage-text"
+                      aria-hidden="true"
+                    />
+                    {perk}
                   </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="size-4 text-primary" aria-hidden="true" />
-                    {plan.durationMinutes} minutos cada
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="size-4 text-primary" aria-hidden="true" />
-                    Área do aluno com materiais
-                  </li>
-                </ul>
-              ) : null}
+                ))}
+              </ul>
               <div className="mt-auto pt-6">
                 <WhatsAppCta
                   variant={plan.highlight ? 'default' : 'outline'}
@@ -67,11 +81,12 @@ export function Plans() {
                   Quero este plano
                 </WhatsAppCta>
               </div>
-            </li>
+            </Reveal>
           ))}
         </ul>
         <p className="mt-6 text-sm text-muted-foreground">
-          Pagamento por Pix. Valores sujeitos a confirmação na conversa inicial.
+          Pagamento por Pix. Valores de exemplo, sujeitos a confirmação na conversa
+          inicial.
         </p>
       </div>
     </section>
