@@ -63,7 +63,9 @@ describe('validatePlanForm', () => {
   })
 
   it('mensalidade exige aulas por mês', () => {
-    expect(validatePlanForm({ ...plan, lessons_per_month: '0' }).errors.lessons_per_month).toBeTruthy()
+    expect(
+      validatePlanForm({ ...plan, lessons_per_month: '0' }).errors.lessons_per_month,
+    ).toBeTruthy()
   })
 
   it('pacote exige aulas no pacote e zera aulas por mês', () => {
@@ -89,7 +91,10 @@ describe('validatePlanForm', () => {
     expect(r.errors.name).toBeTruthy()
     expect(r.errors.lesson_duration_minutes).toBeTruthy()
     expect(r.errors.price).toBeTruthy()
-    expect(validatePlanForm({ ...plan, lesson_duration_minutes: '481' }).errors.lesson_duration_minutes).toBeTruthy()
+    expect(
+      validatePlanForm({ ...plan, lesson_duration_minutes: '481' }).errors
+        .lesson_duration_minutes,
+    ).toBeTruthy()
   })
 })
 
@@ -105,7 +110,10 @@ describe('validatePolicyForm', () => {
   it('aceita política válida', () => {
     const r = validatePolicyForm(policy)
     expect(r.errors).toEqual({})
-    expect(r.values).toMatchObject({ cancellation_min_hours: 24, cancellation_policy_text: null })
+    expect(r.values).toMatchObject({
+      cancellation_min_hours: 24,
+      cancellation_policy_text: null,
+    })
   })
 
   it('faixa >= prazo é inválida quando ativada', () => {
@@ -172,7 +180,11 @@ describe('validatePixForm', () => {
   })
 
   it('chave sem nome/cidade é inválida', () => {
-    const r = validatePixForm({ ...emptyPix, pix_key_type: 'cpf', pix_key: '123.456.789-09' })
+    const r = validatePixForm({
+      ...emptyPix,
+      pix_key_type: 'cpf',
+      pix_key: '123.456.789-09',
+    })
     expect(r.values).toBeNull()
     expect(r.errors.receiver_name).toBeTruthy()
     expect(r.errors.receiver_city).toBeTruthy()
@@ -190,8 +202,14 @@ describe('validatePixForm', () => {
 
   it('valida a chave conforme o tipo e normaliza', () => {
     const base = { ...emptyPix, receiver_name: 'Ana', receiver_city: 'Sao Paulo' }
-    expect(validatePixForm({ ...base, pix_key_type: 'cpf', pix_key: '123' }).errors.pix_key).toBeTruthy()
-    const ok = validatePixForm({ ...base, pix_key_type: 'email', pix_key: ' Ana@Mail.com ' })
+    expect(
+      validatePixForm({ ...base, pix_key_type: 'cpf', pix_key: '123' }).errors.pix_key,
+    ).toBeTruthy()
+    const ok = validatePixForm({
+      ...base,
+      pix_key_type: 'email',
+      pix_key: ' Ana@Mail.com ',
+    })
     expect(ok.errors).toEqual({})
     expect(ok.values?.pix_key).toBe('ana@mail.com')
   })

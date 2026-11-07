@@ -99,7 +99,9 @@ function PlanForm({
       onSaved()
       onClose()
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Não foi possível salvar o plano.')
+      setSubmitError(
+        err instanceof Error ? err.message : 'Não foi possível salvar o plano.',
+      )
       setBusy(false)
     }
   }

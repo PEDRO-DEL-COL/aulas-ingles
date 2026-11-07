@@ -19,7 +19,6 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 - Navegação das áreas extraída para `AreaNav`.
 
-
 ## [0.7.0] - 2026-11-07
 
 ### Adicionado

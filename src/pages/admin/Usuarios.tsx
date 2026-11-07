@@ -30,8 +30,10 @@ import { useQuery } from '@/lib/data/useQuery'
 type Pending = { target: ProfileRow; patch: AccessPatch }
 
 const ROLE_EFFECT: Record<SelectableRole, string> = {
-  aluno: 'A pessoa passa a ver apenas a área do aluno (precisa estar ativa e ter ficha de aluno).',
-  professora: 'A pessoa passa a acessar a agenda, os alunos e os materiais da professora.',
+  aluno:
+    'A pessoa passa a ver apenas a área do aluno (precisa estar ativa e ter ficha de aluno).',
+  professora:
+    'A pessoa passa a acessar a agenda, os alunos e os materiais da professora.',
   admin:
     'Promover a admin dá acesso a configurações, planos, Pix e usuários. Faça isso só com quem você confia.',
 }
@@ -141,7 +143,10 @@ export default function Usuarios() {
             const needsSetup = u.role === 'responsavel' || (!u.active && !isMe)
             const roleId = `papel-${u.id}`
             return (
-              <li key={u.id} className="space-y-3 rounded-xl border bg-card p-3 shadow-sm">
+              <li
+                key={u.id}
+                className="space-y-3 rounded-xl border bg-card p-3 shadow-sm"
+              >
                 <div className="min-w-0">
                   <p className="truncate font-semibold">
                     {u.full_name || 'Sem nome'}
@@ -165,8 +170,8 @@ export default function Usuarios() {
 
                 {needsSetup && check.ok ? (
                   <p className="text-xs text-muted-foreground">
-                    Para liberar esta pessoa, escolha um papel (aluno, professora ou admin) e
-                    ative o acesso.
+                    Para liberar esta pessoa, escolha um papel (aluno, professora ou
+                    admin) e ative o acesso.
                   </p>
                 ) : null}
 

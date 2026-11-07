@@ -11,7 +11,11 @@ import {
 } from '@/features/admin/validation'
 import { ConfirmDialog } from '@/features/professora/components/ConfirmDialog'
 import { FormField } from '@/features/professora/components/FormField'
-import { ErrorState, ListSkeleton, PageHeader } from '@/features/shared/components/StateViews'
+import {
+  ErrorState,
+  ListSkeleton,
+  PageHeader,
+} from '@/features/shared/components/StateViews'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useQuery } from '@/lib/data/useQuery'
 import { buildPixPayload, type PixKeyType } from '@/lib/pix'
@@ -102,7 +106,8 @@ function PixForm({ settings, onSaved }: { settings: SettingsRow; onSaved: () => 
     } catch (err) {
       preview = {
         ok: false,
-        message: err instanceof Error ? err.message : 'Não foi possível gerar o código Pix.',
+        message:
+          err instanceof Error ? err.message : 'Não foi possível gerar o código Pix.',
       }
     }
   }

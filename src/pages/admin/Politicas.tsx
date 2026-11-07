@@ -10,7 +10,11 @@ import {
   type PolicyFormValues,
 } from '@/features/admin/validation'
 import { FormField } from '@/features/professora/components/FormField'
-import { ErrorState, ListSkeleton, PageHeader } from '@/features/shared/components/StateViews'
+import {
+  ErrorState,
+  ListSkeleton,
+  PageHeader,
+} from '@/features/shared/components/StateViews'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useQuery } from '@/lib/data/useQuery'
 
@@ -45,7 +49,13 @@ function summarize(v: PolicyFormValues): string | null {
   return parts.join(' ')
 }
 
-function PolicyForm({ settings, onSaved }: { settings: SettingsRow; onSaved: () => void }) {
+function PolicyForm({
+  settings,
+  onSaved,
+}: {
+  settings: SettingsRow
+  onSaved: () => void
+}) {
   const [values, setValues] = useState<PolicyFormValues>(() => toForm(settings))
   const [errors, setErrors] = useState<PolicyFormErrors>({})
   const [busy, setBusy] = useState(false)
@@ -155,7 +165,10 @@ function PolicyForm({ settings, onSaved }: { settings: SettingsRow; onSaved: () 
         )}
       </FormField>
 
-      <section aria-labelledby="resumo-politica" className="rounded-xl border bg-card p-3">
+      <section
+        aria-labelledby="resumo-politica"
+        className="rounded-xl border bg-card p-3"
+      >
         <h2 id="resumo-politica" className="text-sm font-semibold">
           Resumo
         </h2>

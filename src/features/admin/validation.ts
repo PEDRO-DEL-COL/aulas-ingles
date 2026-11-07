@@ -170,7 +170,12 @@ export function validatePolicyForm(v: PolicyFormValues): {
   if (text.length > 4000)
     errors.cancellation_policy_text = 'O texto pode ter no máximo 4000 caracteres.'
 
-  if (Object.keys(errors).length > 0 || min === null || band === null || makeups === null) {
+  if (
+    Object.keys(errors).length > 0 ||
+    min === null ||
+    band === null ||
+    makeups === null
+  ) {
     return { values: null, errors }
   }
   return {
@@ -188,13 +193,17 @@ export function validatePolicyForm(v: PolicyFormValues): {
 // ---------- WhatsApp ----------
 
 /** Só dígitos (aceita +, espaços, parênteses, hífens). '' => null. Erro se não tiver 10–15 dígitos. */
-export function normalizeWhatsApp(text: string): { value: string | null; error?: string } {
+export function normalizeWhatsApp(text: string): {
+  value: string | null
+  error?: string
+} {
   const digits = text.replace(/\D/g, '')
   if (text.trim() === '' || digits === '') return { value: null }
   if (digits.length < 10 || digits.length > 15) {
     return {
       value: null,
-      error: 'WhatsApp inválido: use DDI + DDD + número (10 a 15 dígitos), ex.: 5511999998888.',
+      error:
+        'WhatsApp inválido: use DDI + DDD + número (10 a 15 dígitos), ex.: 5511999998888.',
     }
   }
   return { value: digits }
@@ -231,10 +240,12 @@ export function validatePixForm(v: PixFormValues): {
   const city = v.receiver_city.trim()
   const type = v.pix_key_type === '' ? null : v.pix_key_type
 
-  if (type !== null && !PIX_KEY_TYPES.includes(type)) errors.pix_key_type = 'Tipo de chave inválido.'
+  if (type !== null && !PIX_KEY_TYPES.includes(type))
+    errors.pix_key_type = 'Tipo de chave inválido.'
 
   if (name.length > 25) errors.receiver_name = 'O nome pode ter no máximo 25 caracteres.'
-  if (city.length > 15) errors.receiver_city = 'A cidade pode ter no máximo 15 caracteres.'
+  if (city.length > 15)
+    errors.receiver_city = 'A cidade pode ter no máximo 15 caracteres.'
 
   let key: string | null = null
   if (rawKey !== '') {
@@ -249,7 +260,8 @@ export function validatePixForm(v: PixFormValues): {
         errors.pix_key = e instanceof Error ? e.message : 'Chave Pix inválida.'
       }
     }
-    if (name === '') errors.receiver_name = 'Informe o nome do recebedor (obrigatório com chave Pix).'
+    if (name === '')
+      errors.receiver_name = 'Informe o nome do recebedor (obrigatório com chave Pix).'
     if (city === '')
       errors.receiver_city = 'Informe a cidade do recebedor (obrigatório com chave Pix).'
   }

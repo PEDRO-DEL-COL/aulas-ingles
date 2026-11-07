@@ -16,7 +16,8 @@ export async function getSettings(): Promise<SettingsRow | null> {
     .select('*')
     .eq('id', true)
     .maybeSingle()
-  if (error) throw new Error(friendlyError(error, 'Não foi possível carregar as configurações.'))
+  if (error)
+    throw new Error(friendlyError(error, 'Não foi possível carregar as configurações.'))
   return data
 }
 
@@ -53,7 +54,11 @@ export async function savePlan(input: PlanInput, id?: string): Promise<PlanRow> 
 }
 
 export async function deletePlan(id: string): Promise<void> {
-  const { data, error } = await getSupabase().from('plans').delete().eq('id', id).select('id')
+  const { data, error } = await getSupabase()
+    .from('plans')
+    .delete()
+    .eq('id', id)
+    .select('id')
   if (error) throw new Error(friendlyError(error, 'Não foi possível excluir o plano.'))
   if (!data || data.length !== 1) throw new Error(NO_PERMISSION)
 }

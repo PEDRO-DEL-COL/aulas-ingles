@@ -16,7 +16,11 @@ export type UserFilter = 'todos' | 'ativos' | 'inativos' | Role
 export type AccessPatch = { role?: SelectableRole; active?: boolean }
 export type AccessCheck = { ok: true } | { ok: false; reason: string }
 
-export const SELECTABLE_ROLES: readonly SelectableRole[] = ['aluno', 'professora', 'admin']
+export const SELECTABLE_ROLES: readonly SelectableRole[] = [
+  'aluno',
+  'professora',
+  'admin',
+]
 
 const COLUMNS = 'id, full_name, email, role, active, created_at, terms_accepted_at'
 
@@ -25,7 +29,8 @@ export async function listProfiles(): Promise<ProfileRow[]> {
     .from('profiles')
     .select(COLUMNS)
     .order('full_name', { ascending: true })
-  if (error) throw new Error(friendlyError(error, 'Não foi possível carregar os usuários.'))
+  if (error)
+    throw new Error(friendlyError(error, 'Não foi possível carregar os usuários.'))
   return data
 }
 
@@ -36,7 +41,8 @@ export async function updateProfileAccess(id: string, patch: AccessPatch): Promi
     .eq('id', id)
     .select('id')
   if (error) throw new Error(friendlyError(error, 'Não foi possível salvar a alteração.'))
-  if (!data || data.length !== 1) throw new Error('Você não tem permissão para fazer isso.')
+  if (!data || data.length !== 1)
+    throw new Error('Você não tem permissão para fazer isso.')
 }
 
 export function roleLabel(role: Role): string {
@@ -82,11 +88,7 @@ export function canChangeAccess(
 }
 
 function normalize(s: string): string {
-  return s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim()
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 }
 
 export function filterProfiles(
