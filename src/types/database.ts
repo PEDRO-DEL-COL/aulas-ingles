@@ -1,6 +1,6 @@
 /**
  * Tipos do banco, ESCRITOS À MÃO no formato de `supabase gen types typescript`,
- * espelhando supabase/migrations até 20261111000001_pix_txid_limit.sql.
+ * espelhando supabase/migrations até 20261112000001_public_site_info.sql.
  *
  * Por que à mão: gerar exige um Postgres com as migrations aplicadas — o projeto
  * remoto (`--linked`, só quem tem acesso ao painel deve rodar) ou um banco local
@@ -382,6 +382,10 @@ export type Database = {
       schedule_makeup: {
         Args: { p_original_lesson: string; p_starts_at: string; p_duration?: number }
         Returns: LessonRow
+      }
+      public_site_info: {
+        Args: Record<string, never>
+        Returns: Json
       }
       makeups_used_in_month: {
         Args: { p_student: string; p_month: string }
