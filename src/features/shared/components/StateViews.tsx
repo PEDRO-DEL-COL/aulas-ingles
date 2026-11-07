@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { GENERIC_ERROR } from '@/features/aluno/errors'
+import { GENERIC_ERROR } from '@/features/shared/errors'
 
 export function PageHeader({
   title,

@@ -11,10 +11,10 @@ import {
   EmptyState,
   ErrorState,
   ListSkeleton,
-} from '@/features/aluno/components/StateViews'
+} from '@/features/shared/components/StateViews'
 import { LessonStatusBadge } from '@/features/aluno/components/StatusBadges'
 import { MaterialItem } from '@/features/aluno/components/MaterialItem'
-import { formatDateTimeLong } from '@/features/aluno/datetime'
+import { formatDateTimeLong } from '@/features/shared/datetime'
 import { makeupText } from '@/features/aluno/lessons'
 
 function TextBlock({ title, text }: { title: string; text: string }) {

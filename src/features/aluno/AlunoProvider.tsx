@@ -5,9 +5,9 @@ import { useQuery } from '@/lib/data/useQuery'
 
 import { getMyStudent, getSettings } from './api'
 import { AlunoContext, type AlunoValue } from './AlunoContext'
-import { ErrorState, ListSkeleton } from './components/StateViews'
-import { safeTimezone } from './datetime'
-import { EmptyState } from './components/StateViews'
+import { ErrorState, ListSkeleton } from '@/features/shared/components/StateViews'
+import { safeTimezone } from '@/features/shared/datetime'
+import { EmptyState } from '@/features/shared/components/StateViews'
 
 /** Carrega a ficha do aluno e as configurações uma vez para toda a área. */
 export function AlunoProvider({ children }: { children: ReactNode }) {

@@ -7,7 +7,7 @@ import {
   ErrorState,
   ListSkeleton,
   PageHeader,
-} from '@/features/aluno/components/StateViews'
+} from '@/features/shared/components/StateViews'
 import { MaterialItem } from '@/features/aluno/components/MaterialItem'
 import { MATERIAL_TYPES } from '@/features/aluno/components/materialTypes'
 

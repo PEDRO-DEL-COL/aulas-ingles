@@ -13,10 +13,10 @@ import {
   ErrorState,
   ListSkeleton,
   PageHeader,
-} from '@/features/aluno/components/StateViews'
-import { useNow } from '@/features/aluno/useNow'
+} from '@/features/shared/components/StateViews'
+import { useNow } from '@/features/shared/useNow'
 import { LessonStatusBadge } from '@/features/aluno/components/StatusBadges'
-import { dayKey, formatDayFull, formatTime } from '@/features/aluno/datetime'
+import { dayKey, formatDayFull, formatTime } from '@/features/shared/datetime'
 import {
   canStudentCancel,
   lessonEnd,

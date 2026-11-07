@@ -5,7 +5,7 @@
 import { getSupabase } from '@/lib/supabase'
 import type { Tables } from '@/types/database'
 
-import { friendlyError } from './errors'
+import { friendlyError } from '@/features/shared/errors'
 import type { Invoice } from './invoices'
 import type { Lesson, Settings, StudentRecord } from './lessons'
 

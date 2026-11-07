@@ -3,7 +3,7 @@ import { Route, Routes } from 'react-router'
 
 import { AppShell } from '@/components/app/AppShell'
 import { AlunoNav } from '@/features/aluno/components/AlunoNav'
-import { EmptyState, ListSkeleton } from '@/features/aluno/components/StateViews'
+import { EmptyState, ListSkeleton } from '@/features/shared/components/StateViews'
 import { AlunoProvider } from '@/features/aluno/AlunoProvider'
 
 const Inicio = lazy(() => import('@/pages/aluno/Inicio'))

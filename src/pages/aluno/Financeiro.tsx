@@ -14,13 +14,13 @@ import {
   ErrorState,
   ListSkeleton,
   PageHeader,
-} from '@/features/aluno/components/StateViews'
+} from '@/features/shared/components/StateViews'
 import { InvoiceStatusBadge } from '@/features/aluno/components/StatusBadges'
 import {
   formatDateOnly,
   formatDateTime,
   formatReferenceMonth,
-} from '@/features/aluno/datetime'
+} from '@/features/shared/datetime'
 import { isPayable, type Invoice } from '@/features/aluno/invoices'
 
 function title(i: Invoice): string {

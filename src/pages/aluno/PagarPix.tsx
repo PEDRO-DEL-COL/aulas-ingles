@@ -18,8 +18,8 @@ import {
   EmptyState,
   ErrorState,
   ListSkeleton,
-} from '@/features/aluno/components/StateViews'
-import { formatDateOnly, referenceYYYYMM } from '@/features/aluno/datetime'
+} from '@/features/shared/components/StateViews'
+import { formatDateOnly, referenceYYYYMM } from '@/features/shared/datetime'
 import { isPayable, type Invoice } from '@/features/aluno/invoices'
 import type { Settings, StudentRecord } from '@/features/aluno/lessons'
 

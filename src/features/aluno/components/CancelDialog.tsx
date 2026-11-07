@@ -6,7 +6,7 @@ import { Dialog } from '@/components/ui/dialog'
 import { Label, Textarea } from '@/components/ui/field'
 import { cancelLesson } from '@/features/aluno/api'
 import { useAluno } from '@/features/aluno/AlunoContext'
-import { formatDateTimeLong } from '@/features/aluno/datetime'
+import { formatDateTimeLong } from '@/features/shared/datetime'
 import {
   previewCancellation,
   previewMessage,

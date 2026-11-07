@@ -10,9 +10,13 @@ import { useAuth } from '@/lib/auth/useAuth'
 import { useQuery } from '@/lib/data/useQuery'
 import { getPlan, updateMyProfile } from '@/features/aluno/api'
 import { useAluno } from '@/features/aluno/AlunoContext'
-import { PageHeader } from '@/features/aluno/components/StateViews'
+import { PageHeader } from '@/features/shared/components/StateViews'
 import { formatBRL } from '@/lib/format'
-import { formatDateTime, safeTimezone, TIMEZONE_OPTIONS } from '@/features/aluno/datetime'
+import {
+  formatDateTime,
+  safeTimezone,
+  TIMEZONE_OPTIONS,
+} from '@/features/shared/datetime'
 
 const SAVED_KEY = 'aluno:perfil-salvo'
 

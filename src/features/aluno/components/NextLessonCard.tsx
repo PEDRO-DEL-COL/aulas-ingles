@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useAluno } from '@/features/aluno/AlunoContext'
 import { formatCountdown, getCountdown, tickIntervalMs } from '@/features/aluno/countdown'
-import { formatDateTimeLong } from '@/features/aluno/datetime'
+import { formatDateTimeLong } from '@/features/shared/datetime'
 import {
   JOIN_EARLY_MINUTES,
   joinWindowState,
@@ -14,7 +14,7 @@ import {
   safeExternalUrl,
   type Lesson,
 } from '@/features/aluno/lessons'
-import { useNow } from '@/features/aluno/useNow'
+import { useNow } from '@/features/shared/useNow'
 import { cn } from '@/lib/utils'
 
 import { LessonStatusBadge } from './StatusBadges'

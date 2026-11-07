@@ -11,11 +11,11 @@ import {
   ErrorState,
   ListSkeleton,
   PageHeader,
-} from '@/features/aluno/components/StateViews'
+} from '@/features/shared/components/StateViews'
 import { LessonStatusBadge } from '@/features/aluno/components/StatusBadges'
-import { formatDateTime } from '@/features/aluno/datetime'
+import { formatDateTime } from '@/features/shared/datetime'
 import { isActiveStatus, lessonEnd, makeupText } from '@/features/aluno/lessons'
-import { useNow } from '@/features/aluno/useNow'
+import { useNow } from '@/features/shared/useNow'
 
 export default function Historico() {
   useDocumentTitle('Histórico')
