@@ -1,10 +1,10 @@
 -- pgTAP: area do admin (protecao de admins, settings, plans) e financeiro (invoices).
--- Migrations 20261109000001_admin_area e 20261110000001_invoices_finance.
--- Roda numa transacao com ROLLBACK.
+-- Migrations 20261109000001_admin_area, 20261110000001_invoices_finance e
+-- 20261111000001_pix_txid_limit. Roda numa transacao com ROLLBACK.
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(34);
+select plan(35);
 
 create function pg_temp.as_user(p_uid uuid) returns void language plpgsql as $$
 begin
@@ -122,6 +122,8 @@ select lives_ok($$update public.invoices set status = 'pago' where id = '2222222
                 'professora marca como pago');
 select lives_ok($$update public.invoices set status = 'em_aberto' where id = '22222222-0000-0000-0000-0000000000a1'$$,
                 'professora desfaz o pagamento');
+select throws_ok($$update public.invoices set pix_txid = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' where id = '22222222-0000-0000-0000-0000000000a1'$$,
+                 '23514', null, 'pix_txid com 26 caracteres e rejeitado');
 reset role;
 select is((select paid_at is null and confirmed_by is null from public.invoices
            where id = '22222222-0000-0000-0000-0000000000a1'), true,
