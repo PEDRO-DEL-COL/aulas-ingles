@@ -6,6 +6,17 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.9.1] - 2026-11-07
+
+### Corrigido
+
+- `invoices.pix_txid` aceitava 35 caracteres no banco, mas o BR Code só aceita 25: migration `20261111000001_pix_txid_limit.sql` (check `invoices_pix_txid_chk`, valores inválidos viram `NULL`) e validação no front (`isValidTxid`; a tela do Pix ignora txid inválido e gera um novo; o financeiro rejeita antes de gravar).
+- Geração de aulas recorrentes não fica mais presa à semana exibida: a Agenda permite escolher a semana exibida ou as próximas 4 ou 8 semanas.
+
+### Documentação
+
+- `src/types/database.ts` continua escrito à mão (gerar exige banco com as migrations); cabeçalho e `supabase/README.md` explicam como regenerar e a regra de atualizar no mesmo commit da migration.
+
 ## [0.9.0] - 2026-11-07
 
 ### Adicionado
