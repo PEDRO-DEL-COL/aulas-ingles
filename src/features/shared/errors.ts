@@ -54,6 +54,13 @@ const KNOWN: readonly [needle: string, message: string][] = [
   ],
   ['invoices_monthly_unique', 'Já existe uma mensalidade deste aluno para esse mês.'],
   ['invoices_pix_txid', 'Identificador do Pix inválido: use até 25 letras ou números.'],
+  // Mensalidades em lote (migration 20261114000001)
+  [
+    'somente a equipe gera mensalidades',
+    'Somente a professora ou o admin geram mensalidades.',
+  ],
+  ['dia de vencimento invalido', 'Escolha um dia de vencimento entre 1 e 31.'],
+  ['informe o mes de referencia', 'Escolha o mês de referência.'],
 ]
 
 export const GENERIC_ERROR = 'Algo deu errado. Verifique a conexão e tente de novo.'

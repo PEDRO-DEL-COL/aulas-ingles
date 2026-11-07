@@ -1,6 +1,6 @@
 /**
  * Tipos do banco, ESCRITOS À MÃO no formato de `supabase gen types typescript`,
- * espelhando supabase/migrations até 20261113000001_blocked_dates_cancel.sql.
+ * espelhando supabase/migrations até 20261114000001_monthly_invoices_batch.sql.
  *
  * Por que à mão: gerar exige um Postgres com as migrations aplicadas — o projeto
  * remoto (`--linked`, só quem tem acesso ao painel deve rodar) ou um banco local
@@ -388,6 +388,26 @@ export type Database = {
       public_site_info: {
         Args: Record<string, never>
         Returns: Json
+      }
+      generate_monthly_invoices: {
+        Args: { p_month: string; p_due_day?: number; p_dry_run?: boolean }
+        Returns: {
+          student_id: string
+          student_name: string
+          plan_id: string | null
+          plan_name: string | null
+          amount_cents: number | null
+          reference_month: string
+          due_date: string
+          action:
+            | 'criar'
+            | 'criada'
+            | 'ja_existe'
+            | 'sem_plano'
+            | 'plano_inativo'
+            | 'nao_mensal'
+          invoice_id: string | null
+        }[]
       }
       makeups_used_in_month: {
         Args: { p_student: string; p_month: string }
