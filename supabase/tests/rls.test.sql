@@ -34,8 +34,8 @@ insert into public.student_guardians (student_id, guardian_email, guardian_name,
   ('b0000000-0000-0000-0000-00000000000b', 'g2@test.local', 'Responsavel de B', false, true);
 insert into public.payers (id, name) values ('99999999-0000-0000-0000-000000000001', 'Pagador de A');
 
-insert into public.plans (id, name, price_cents) values
-  ('88888888-0000-0000-0000-000000000001', 'Plano teste', 30000);
+insert into public.plans (id, name, billing_model, price_cents) values
+  ('88888888-0000-0000-0000-000000000001', 'Plano teste', 'avulsa', 30000);
 
 -- Usuarios (o trigger on_auth_user_created cria os profiles).
 -- email_confirmed_at preenchido: so contas confirmadas sao ligadas as fichas (como no login Google).
@@ -59,9 +59,9 @@ insert into public.lessons (id, student_id, starts_at) values
 insert into public.lesson_notes (lesson_id, content, summary, homework)
   values ('11111111-0000-0000-0000-00000000000a', 'conteudo', 'resumo', 'tarefa');
 
-insert into public.invoices (id, student_id, amount_cents, due_date) values
-  ('22222222-0000-0000-0000-00000000000a', 'a0000000-0000-0000-0000-00000000000a', 20000, '2027-03-10'),
-  ('22222222-0000-0000-0000-00000000000b', 'b0000000-0000-0000-0000-00000000000b', 20000, '2027-03-10');
+insert into public.invoices (id, student_id, billing_model, amount_cents, due_date) values
+  ('22222222-0000-0000-0000-00000000000a', 'a0000000-0000-0000-0000-00000000000a', 'avulsa', 20000, '2027-03-10'),
+  ('22222222-0000-0000-0000-00000000000b', 'b0000000-0000-0000-0000-00000000000b', 'avulsa', 20000, '2027-03-10');
 
 insert into public.private_notes (student_id, body)
   values ('a0000000-0000-0000-0000-00000000000a', 'anotacao privada sobre A');
@@ -154,7 +154,7 @@ select throws_ok($$select public.generate_lessons('2027-01-04', '2027-01-18')$$,
                  '42501', null, 'aluno A nao consegue gerar aulas');
 select lives_ok($$update public.settings set pix_key = 'hack@test.local'$$,
                 'aluno A: update em settings nao da erro (mas nao afeta linhas)');
-select throws_ok($$insert into public.plans (name, price_cents) values ('Plano do aluno', 1)$$,
+select throws_ok($$insert into public.plans (name, billing_model, price_cents) values ('Plano do aluno', 'avulsa', 1)$$,
                  '42501', null, 'aluno A nao cria plano');
 
 reset role;
@@ -202,7 +202,7 @@ select throws_ok($$update public.profiles set role = 'admin' where id = 'd100000
                  '42501', null, 'professora nao promove o proprio papel');
 select lives_ok($$insert into public.private_notes (student_id, body) values ('b0000000-0000-0000-0000-00000000000b', 'nota da professora')$$,
                 'professora cria private_note');
-select lives_ok($$insert into public.invoices (student_id, amount_cents, due_date) values ('a0000000-0000-0000-0000-00000000000a', 15000, '2027-04-10')$$,
+select lives_ok($$insert into public.invoices (student_id, billing_model, amount_cents, due_date) values ('a0000000-0000-0000-0000-00000000000a', 'avulsa', 15000, '2027-04-10')$$,
                 'professora lanca cobranca');
 select lives_ok($$update public.invoices set status = 'pago' where id = '22222222-0000-0000-0000-00000000000b'$$,
                 'professora marca cobranca como paga');
@@ -210,7 +210,7 @@ select lives_ok($$insert into public.students (full_name, email) values ('Aluno 
                 'professora cria ficha de aluno');
 select lives_ok($$update public.settings set pix_key = 'prof@test.local'$$,
                 'professora: update em settings nao da erro (mas nao afeta linhas)');
-select throws_ok($$insert into public.plans (name, price_cents) values ('Plano da professora', 1)$$,
+select throws_ok($$insert into public.plans (name, billing_model, price_cents) values ('Plano da professora', 'avulsa', 1)$$,
                  '42501', null, 'professora nao cria plano (so admin)');
 select lives_ok($$update public.plans set price_cents = 1$$,
                 'professora: update em plans nao da erro (mas nao afeta linhas)');
@@ -242,8 +242,9 @@ select is((select status::text || '/' || (confirmed_by = 'd1000000-0000-0000-000
 select pg_temp.as_user('d2000000-0000-0000-0000-0000000000d2');
 select lives_ok($$update public.profiles set role = 'professora' where id = 'f1000000-0000-0000-0000-0000000000f1'$$,
                 'admin altera papel');
-select lives_ok($$update public.settings set pix_key = 'pix@test.local'$$, 'admin altera settings');
-select lives_ok($$insert into public.plans (name, price_cents) values ('Plano do admin', 25000)$$,
+select lives_ok($$update public.settings set pix_key = 'pix@test.local', pix_key_type = 'email',
+                  receiver_name = 'Professora Teste', receiver_city = 'Sao Paulo'$$, 'admin altera settings');
+select lives_ok($$insert into public.plans (name, billing_model, price_cents) values ('Plano do admin', 'avulsa', 25000)$$,
                 'admin cria plano');
 select lives_ok($$delete from public.students where email = 'novo@test.local'$$, 'admin exclui ficha');
 select lives_ok($$delete from public.profiles where id = 'e1000000-0000-0000-0000-0000000000e1'$$,
