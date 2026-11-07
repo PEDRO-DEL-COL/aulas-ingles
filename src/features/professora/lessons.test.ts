@@ -8,6 +8,7 @@ import {
   needsMakeupDecision,
   reminderLink,
   reminderMessage,
+  withoutMakeup,
 } from './lessons'
 
 const SP = 'America/Sao_Paulo'
@@ -109,5 +110,17 @@ describe('regras de ação', () => {
       needsMakeupDecision({ status: 'cancelada_aluno', makeup_eligible: true }),
     ).toBe(false)
     expect(needsMakeupDecision({ status: 'agendada', makeup_eligible: null })).toBe(false)
+  })
+})
+
+describe('withoutMakeup', () => {
+  it('remove as que já têm reposição e ordena por data', () => {
+    const l = [
+      { id: 'b', starts_at: '2026-11-12T10:00:00Z' },
+      { id: 'a', starts_at: '2026-11-10T10:00:00Z' },
+      { id: 'c', starts_at: '2026-11-11T10:00:00Z' },
+    ]
+    expect(withoutMakeup(l, new Set(['c'])).map((x) => x.id)).toEqual(['a', 'b'])
+    expect(withoutMakeup([], new Set())).toEqual([])
   })
 })

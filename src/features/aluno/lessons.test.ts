@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   canStudentCancel,
+  findMakeup,
   joinWindowState,
   lessonStatusInfo,
   makeupText,
@@ -26,6 +27,7 @@ const base: Lesson = {
   canceled_by: null,
   makeup_eligible: null,
   makeup_decided_by: null,
+  blocked_date_id: null,
   created_at: '2026-11-01T00:00:00Z',
   updated_at: '2026-11-01T00:00:00Z',
 }
@@ -138,5 +140,33 @@ describe('rótulos', () => {
       /critério/,
     )
     expect(makeupText(base)).toBeNull()
+  })
+
+  it('cancelada pela professora: motivo e reposição', () => {
+    const l = mk({
+      status: 'cancelada_professora',
+      makeup_eligible: true,
+      cancel_reason: 'Férias/feriado: Natal',
+    })
+    expect(makeupText(l)).toBe(
+      'Cancelada pela professora (Férias/feriado: Natal). Você tem direito a reposição; a professora vai agendar.',
+    )
+    expect(makeupText(mk({ status: 'cancelada_professora' }))).toMatch(
+      /^Cancelada pela professora\. /,
+    )
+    expect(makeupText(l, { starts_at: '2026-11-20T15:00:00Z' }, () => '20/11')).toMatch(
+      /Reposição agendada para 20\/11\.$/,
+    )
+  })
+})
+
+describe('findMakeup', () => {
+  it('acha a reposição ativa derivada da aula', () => {
+    const origin = mk({ id: 'o', status: 'cancelada_professora' })
+    const old = mk({ id: 'r0', rescheduled_from: 'o', status: 'cancelada_aluno' })
+    const rep = mk({ id: 'r1', rescheduled_from: 'o', status: 'reposicao' })
+    expect(findMakeup('o', [origin, old, rep])?.id).toBe('r1')
+    expect(findMakeup('o', [origin, old])).toBeNull()
+    expect(findMakeup('x', [origin, rep])).toBeNull()
   })
 })

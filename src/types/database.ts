@@ -1,6 +1,6 @@
 /**
  * Tipos do banco, ESCRITOS À MÃO no formato de `supabase gen types typescript`,
- * espelhando supabase/migrations até 20261112000001_public_site_info.sql.
+ * espelhando supabase/migrations até 20261113000001_blocked_dates_cancel.sql.
  *
  * Por que à mão: gerar exige um Postgres com as migrations aplicadas — o projeto
  * remoto (`--linked`, só quem tem acesso ao painel deve rodar) ou um banco local
@@ -154,6 +154,8 @@ type LessonRow = {
   canceled_by: string | null
   makeup_eligible: boolean | null
   makeup_decided_by: string | null
+  /** Período de férias/feriado que cancelou a aula automaticamente (migration 13). */
+  blocked_date_id: string | null
   created_at: string
   updated_at: string
 }
