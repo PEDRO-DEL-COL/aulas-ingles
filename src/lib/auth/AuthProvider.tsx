@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = useCallback(async () => {
     if (!userId) return
-    setProfileState(null)
+    // Mantém o perfil atual enquanto recarrega (evita desmontar a tela inteira).
     setProfileState(await loadProfile(userId))
   }, [userId])
 
