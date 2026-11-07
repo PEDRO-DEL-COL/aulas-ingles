@@ -6,6 +6,20 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.9.0] - 2026-11-07
+
+### Adicionado
+
+- Financeiro da professora/admin (`/app/professora/financeiro`): lançar cobrança nos 3 modelos (mensalidade, pacote, avulsa) com pré-preenchimento pelo plano, resumo (em aberto, atrasado, recebido no mês), abas atrasadas/em aberto/pagas/canceladas, marcar como pago e desfazer, cancelar, avisos de "Já paguei" em destaque e lembrete de cobrança por WhatsApp (telefone do pagador ou do aluno).
+- Materiais (`/app/professora/materiais`): links gerais para todos os alunos, por aluno ou por aula, com filtro, edição e exclusão.
+- Férias e feriados (`/app/professora/feriados`): períodos bloqueados que a geração de aulas recorrentes pula, com aviso quando já existem aulas agendadas no período.
+- Tela "Mais" na navegação da professora (Materiais, Férias e feriados e, para admin, Administração); atalhos para o financeiro em Hoje e na ficha do aluno.
+- Migration `20261110000001_invoices_finance.sql`: desfazer pagamento limpa `paid_at`/`confirmed_by`, `atrasado` nunca é gravado, mensalidade exige mês de referência e pacote exige quantidade de aulas.
+
+### Alterado
+
+- Navegação da professora: Hoje, Agenda, Alunos, Financeiro e Mais (o item "Admin" foi para "Mais").
+
 ## [0.8.0] - 2026-11-07
 
 ### Adicionado
