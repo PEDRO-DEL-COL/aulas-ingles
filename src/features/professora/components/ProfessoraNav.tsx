@@ -1,17 +1,17 @@
-import { CalendarDays, House, ShieldCheck, Users } from 'lucide-react'
+import { CalendarDays, Ellipsis, House, Users, Wallet } from 'lucide-react'
 
 import { AreaNav, type AreaNavItem } from '@/components/app/AreaNav'
-import { useAuth } from '@/lib/auth/useAuth'
 
+// Cinco itens cabem na barra do celular; Materiais, Férias e feriados e (para o admin)
+// a Administração ficam em "Mais".
 const items: AreaNavItem[] = [
   { to: '/app/professora', label: 'Hoje', end: true, icon: House },
   { to: '/app/professora/agenda', label: 'Agenda', icon: CalendarDays },
   { to: '/app/professora/alunos', label: 'Alunos', icon: Users },
+  { to: '/app/professora/financeiro', label: 'Financeiro', icon: Wallet },
+  { to: '/app/professora/mais', label: 'Mais', icon: Ellipsis },
 ]
 
-const adminItem: AreaNavItem = { to: '/app/admin', label: 'Admin', icon: ShieldCheck }
-
 export function ProfessoraNav() {
-  const { profile } = useAuth()
-  return <AreaNav items={profile?.role === 'admin' ? [...items, adminItem] : items} />
+  return <AreaNav items={items} />
 }

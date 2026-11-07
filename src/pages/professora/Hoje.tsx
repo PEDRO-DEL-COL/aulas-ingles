@@ -145,6 +145,12 @@ export default function Hoje() {
               </CardDescription>
             </>
           )}
+          <Link
+            to="/app/professora/financeiro"
+            className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Abrir o financeiro
+          </Link>
         </Card>
 
         <h3 className="pt-1 font-semibold">Reposições a decidir</h3>

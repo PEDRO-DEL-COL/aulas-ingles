@@ -10,6 +10,10 @@ const Agenda = lazy(() => import('@/pages/professora/Agenda'))
 const Alunos = lazy(() => import('@/pages/professora/Alunos'))
 const AlunoFicha = lazy(() => import('@/pages/professora/AlunoFicha'))
 const AulaRegistro = lazy(() => import('@/pages/professora/AulaRegistro'))
+const Financeiro = lazy(() => import('@/pages/professora/Financeiro'))
+const Materiais = lazy(() => import('@/pages/professora/Materiais'))
+const Feriados = lazy(() => import('@/pages/professora/Feriados'))
+const Mais = lazy(() => import('@/pages/professora/Mais'))
 
 export default function ProfessoraArea() {
   return (
@@ -22,6 +26,10 @@ export default function ProfessoraArea() {
           <Route path="alunos/novo" element={<AlunoFicha />} />
           <Route path="alunos/:id" element={<AlunoFicha />} />
           <Route path="aulas/:id" element={<AulaRegistro />} />
+          <Route path="financeiro" element={<Financeiro />} />
+          <Route path="materiais" element={<Materiais />} />
+          <Route path="feriados" element={<Feriados />} />
+          <Route path="mais" element={<Mais />} />
           <Route
             path="*"
             element={

@@ -73,6 +73,12 @@ export default function AlunoFicha() {
           />
           {student.data ? (
             <>
+              <Link
+                to={`/app/professora/financeiro?aluno=${student.data.id}`}
+                className="inline-block text-sm font-medium text-primary underline-offset-4 hover:underline"
+              >
+                Lançar cobrança para este aluno
+              </Link>
               <SchedulesSection studentId={student.data.id} timezone={timezone} />
               <GuardianPayerSection
                 studentId={student.data.id}
