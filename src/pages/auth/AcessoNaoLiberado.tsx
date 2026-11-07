@@ -6,12 +6,15 @@ import {
   ProfileErrorScreen,
   UnconfiguredNotice,
 } from '@/components/auth/AuthScreen'
+import { PublicSiteProvider } from '@/components/landing/PublicSiteProvider'
+import { usePublicSite } from '@/components/landing/usePublicSite'
 import { Button } from '@/components/ui/button'
 import { isReleased } from '@/lib/auth/access'
 import { useAuth } from '@/lib/auth/useAuth'
 import { buildWhatsAppLink } from '@/lib/whatsapp'
 
-export default function AcessoNaoLiberado() {
+function AcessoNaoLiberadoScreen() {
+  const { whatsappNumber } = usePublicSite()
   const { status, profile, user, profileError, signOut } = useAuth()
 
   if (status === 'loading') return <LoadingScreen />
@@ -21,10 +24,9 @@ export default function AcessoNaoLiberado() {
   if (isReleased(profile)) return <Navigate to="/app" replace />
 
   const email = profile?.email || user?.email || ''
-  const whatsapp = (import.meta.env.VITE_WHATSAPP_NUMBER ?? '').trim()
-  const link = whatsapp
+  const link = whatsappNumber
     ? buildWhatsAppLink(
-        whatsapp,
+        whatsappNumber,
         `Olá! Tentei entrar na área do aluno com o e-mail ${email}, mas meu acesso ainda não foi liberado.`,
       )
     : null
@@ -76,5 +78,13 @@ export default function AcessoNaoLiberado() {
         </Button>
       </div>
     </AuthScreen>
+  )
+}
+
+export default function AcessoNaoLiberado() {
+  return (
+    <PublicSiteProvider>
+      <AcessoNaoLiberadoScreen />
+    </PublicSiteProvider>
   )
 }

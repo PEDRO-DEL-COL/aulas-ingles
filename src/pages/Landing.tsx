@@ -3,6 +3,7 @@ import { Faq } from '@/components/landing/Faq'
 import { FinalCta } from '@/components/landing/FinalCta'
 import { Hero } from '@/components/landing/Hero'
 import { HowItWorks } from '@/components/landing/HowItWorks'
+import { PublicSiteProvider } from '@/components/landing/PublicSiteProvider'
 import { Plans } from '@/components/landing/Plans'
 import { SiteFooter } from '@/components/landing/SiteFooter'
 import { SiteHeader } from '@/components/landing/SiteHeader'
@@ -14,7 +15,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 export default function Landing() {
   useDocumentTitle(undefined, brand.description)
   return (
-    <>
+    <PublicSiteProvider>
       <a
         href="#conteudo"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
@@ -33,6 +34,6 @@ export default function Landing() {
       </main>
       <SiteFooter />
       <WhatsAppFloat />
-    </>
+    </PublicSiteProvider>
   )
 }

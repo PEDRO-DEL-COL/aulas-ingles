@@ -1,8 +1,10 @@
 import { ArrowLeft, TriangleAlert } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Link, useLocation } from 'react-router'
 
+import { PublicSiteProvider } from '@/components/landing/PublicSiteProvider'
+import { usePublicSite } from '@/components/landing/usePublicSite'
 import { brand, LEGAL_LAST_UPDATED } from '@/config/brand'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
@@ -11,168 +13,170 @@ type Section = { id: string; title: string; body: ReactNode }
 const controller = `${brand.teacherName} (${brand.name})`
 const contact = brand.contactEmail
 
-const privacidade: Section[] = [
-  {
-    id: 'controladora',
-    title: '1. Quem é a controladora',
-    body: (
-      <p>
-        A controladora dos dados pessoais tratados neste site é {controller}, que pode ser
-        contatada em {contact}
-        {brand.whatsapp.number ? ` ou pelo WhatsApp` : ''}. Este texto segue a Lei Geral
-        de Proteção de Dados (LGPD, Lei nº 13.709/2018).
-      </p>
-    ),
-  },
-  {
-    id: 'dados',
-    title: '2. Quais dados coletamos',
-    body: (
-      <ul>
-        <li>
-          Nome e e-mail da conta Google usada para entrar (fornecidos pelo login do
-          Google).
-        </li>
-        <li>Telefone/WhatsApp, nível de inglês, objetivo e preferências de horário.</li>
-        <li>Dados das aulas: datas, presença, conteúdo, tarefas e resumos.</li>
-        <li>
-          Dados de pagamentos: valores, vencimentos e situação (não guardamos dados de
-          cartão).
-        </li>
-        <li>Anotações pedagógicas feitas pela professora sobre o seu progresso.</li>
-        <li>
-          Se você falar conosco pelo WhatsApp, a conversa fica no próprio aplicativo.
-        </li>
-      </ul>
-    ),
-  },
-  {
-    id: 'finalidades',
-    title: '3. Para que usamos e bases legais',
-    body: (
-      <ul>
-        <li>
-          <strong>Execução de contrato</strong> (art. 7º, V): liberar seu acesso, agendar
-          e registrar aulas, organizar materiais e o controle financeiro.
-        </li>
-        <li>
-          <strong>Legítimo interesse</strong> (art. 7º, IX): segurança do sistema,
-          prevenção a fraudes e melhoria do serviço, respeitando seus direitos.
-        </li>
-        <li>
-          <strong>Consentimento</strong> (art. 7º, I): quando necessário, por exemplo para
-          contatos de divulgação ou para dados de menores de idade. Pode ser retirado a
-          qualquer momento.
-        </li>
-        <li>
-          <strong>Obrigação legal</strong> (art. 7º, II): guarda de registros financeiros
-          quando exigida por lei.
-        </li>
-      </ul>
-    ),
-  },
-  {
-    id: 'menores',
-    title: '4. Crianças e adolescentes',
-    body: (
-      <p>
-        Os dados de menores de 18 anos são tratados no melhor interesse do aluno e com o
-        consentimento específico de pelo menos um dos pais ou do responsável legal (art.
-        14 da LGPD). O responsável pode acompanhar o financeiro e o progresso, e pedir a
-        exclusão dos dados a qualquer momento.
-      </p>
-    ),
-  },
-  {
-    id: 'compartilhamento',
-    title: '5. Com quem compartilhamos',
-    body: (
-      <>
-        <p>Usamos prestadores (operadores) apenas para fazer o serviço funcionar:</p>
+function buildPrivacidade(hasWhatsapp: boolean): Section[] {
+  return [
+    {
+      id: 'controladora',
+      title: '1. Quem é a controladora',
+      body: (
+        <p>
+          A controladora dos dados pessoais tratados neste site é {controller}, que pode
+          ser contatada em {contact}
+          {hasWhatsapp ? ` ou pelo WhatsApp` : ''}. Este texto segue a Lei Geral de
+          Proteção de Dados (LGPD, Lei nº 13.709/2018).
+        </p>
+      ),
+    },
+    {
+      id: 'dados',
+      title: '2. Quais dados coletamos',
+      body: (
         <ul>
           <li>
-            <strong>Supabase</strong>: banco de dados e autenticação.
+            Nome e e-mail da conta Google usada para entrar (fornecidos pelo login do
+            Google).
           </li>
+          <li>Telefone/WhatsApp, nível de inglês, objetivo e preferências de horário.</li>
+          <li>Dados das aulas: datas, presença, conteúdo, tarefas e resumos.</li>
           <li>
-            <strong>Google</strong>: login com conta Google, Google Meet (aulas) e Google
-            Drive (materiais).
+            Dados de pagamentos: valores, vencimentos e situação (não guardamos dados de
+            cartão).
           </li>
+          <li>Anotações pedagógicas feitas pela professora sobre o seu progresso.</li>
           <li>
-            <strong>Cloudflare</strong>: hospedagem do site.
+            Se você falar conosco pelo WhatsApp, a conversa fica no próprio aplicativo.
           </li>
         </ul>
+      ),
+    },
+    {
+      id: 'finalidades',
+      title: '3. Para que usamos e bases legais',
+      body: (
+        <ul>
+          <li>
+            <strong>Execução de contrato</strong> (art. 7º, V): liberar seu acesso,
+            agendar e registrar aulas, organizar materiais e o controle financeiro.
+          </li>
+          <li>
+            <strong>Legítimo interesse</strong> (art. 7º, IX): segurança do sistema,
+            prevenção a fraudes e melhoria do serviço, respeitando seus direitos.
+          </li>
+          <li>
+            <strong>Consentimento</strong> (art. 7º, I): quando necessário, por exemplo
+            para contatos de divulgação ou para dados de menores de idade. Pode ser
+            retirado a qualquer momento.
+          </li>
+          <li>
+            <strong>Obrigação legal</strong> (art. 7º, II): guarda de registros
+            financeiros quando exigida por lei.
+          </li>
+        </ul>
+      ),
+    },
+    {
+      id: 'menores',
+      title: '4. Crianças e adolescentes',
+      body: (
         <p>
-          Esses prestadores podem armazenar dados em servidores fora do Brasil
-          (transferência internacional, art. 33 da LGPD), com garantias contratuais
-          adequadas. Não vendemos seus dados.
+          Os dados de menores de 18 anos são tratados no melhor interesse do aluno e com o
+          consentimento específico de pelo menos um dos pais ou do responsável legal (art.
+          14 da LGPD). O responsável pode acompanhar o financeiro e o progresso, e pedir a
+          exclusão dos dados a qualquer momento.
         </p>
-      </>
-    ),
-  },
-  {
-    id: 'retencao',
-    title: '6. Por quanto tempo guardamos',
-    body: (
-      <p>
-        Guardamos os dados enquanto você for aluno e, depois, pelo tempo necessário para
-        cumprir obrigações legais e resolver eventuais questões (prazo de referência:
-        [definir, ex.: 5 anos para registros financeiros]). Depois disso, os dados são
-        excluídos ou anonimizados.
-      </p>
-    ),
-  },
-  {
-    id: 'direitos',
-    title: '7. Seus direitos (art. 18)',
-    body: (
-      <>
+      ),
+    },
+    {
+      id: 'compartilhamento',
+      title: '5. Com quem compartilhamos',
+      body: (
+        <>
+          <p>Usamos prestadores (operadores) apenas para fazer o serviço funcionar:</p>
+          <ul>
+            <li>
+              <strong>Supabase</strong>: banco de dados e autenticação.
+            </li>
+            <li>
+              <strong>Google</strong>: login com conta Google, Google Meet (aulas) e
+              Google Drive (materiais).
+            </li>
+            <li>
+              <strong>Cloudflare</strong>: hospedagem do site.
+            </li>
+          </ul>
+          <p>
+            Esses prestadores podem armazenar dados em servidores fora do Brasil
+            (transferência internacional, art. 33 da LGPD), com garantias contratuais
+            adequadas. Não vendemos seus dados.
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'retencao',
+      title: '6. Por quanto tempo guardamos',
+      body: (
         <p>
-          Você pode pedir: confirmação de que tratamos seus dados; acesso; correção;
-          anonimização, bloqueio ou eliminação de dados desnecessários; portabilidade;
-          informação sobre compartilhamentos; revogação do consentimento; e eliminação dos
-          dados tratados com consentimento.
+          Guardamos os dados enquanto você for aluno e, depois, pelo tempo necessário para
+          cumprir obrigações legais e resolver eventuais questões (prazo de referência:
+          [definir, ex.: 5 anos para registros financeiros]). Depois disso, os dados são
+          excluídos ou anonimizados.
         </p>
+      ),
+    },
+    {
+      id: 'direitos',
+      title: '7. Seus direitos (art. 18)',
+      body: (
+        <>
+          <p>
+            Você pode pedir: confirmação de que tratamos seus dados; acesso; correção;
+            anonimização, bloqueio ou eliminação de dados desnecessários; portabilidade;
+            informação sobre compartilhamentos; revogação do consentimento; e eliminação
+            dos dados tratados com consentimento.
+          </p>
+          <p>
+            Para exercer qualquer direito, escreva para {contact}. Responderemos em prazo
+            razoável. Você também pode reclamar à Autoridade Nacional de Proteção de Dados
+            (ANPD).
+          </p>
+        </>
+      ),
+    },
+    {
+      id: 'seguranca',
+      title: '8. Segurança',
+      body: (
         <p>
-          Para exercer qualquer direito, escreva para {contact}. Responderemos em prazo
-          razoável. Você também pode reclamar à Autoridade Nacional de Proteção de Dados
-          (ANPD).
+          Cada aluno só acessa os próprios dados (controle de acesso no banco de dados), a
+          conexão é criptografada e o login é feito pelo Google, sem senha própria. Nenhum
+          sistema é totalmente seguro; em caso de incidente relevante, avisaremos os
+          afetados e a ANPD conforme a lei.
         </p>
-      </>
-    ),
-  },
-  {
-    id: 'seguranca',
-    title: '8. Segurança',
-    body: (
-      <p>
-        Cada aluno só acessa os próprios dados (controle de acesso no banco de dados), a
-        conexão é criptografada e o login é feito pelo Google, sem senha própria. Nenhum
-        sistema é totalmente seguro; em caso de incidente relevante, avisaremos os
-        afetados e a ANPD conforme a lei.
-      </p>
-    ),
-  },
-  {
-    id: 'cookies',
-    title: '9. Cookies',
-    body: (
-      <p>
-        Usamos apenas armazenamento essencial para manter sua sessão e autenticação. Não
-        usamos cookies de publicidade nem de rastreamento.
-      </p>
-    ),
-  },
-  {
-    id: 'alteracoes',
-    title: '10. Alterações',
-    body: (
-      <p>
-        Este texto pode ser atualizado. A data da última atualização aparece no topo da
-        página, e mudanças relevantes serão comunicadas.
-      </p>
-    ),
-  },
-]
+      ),
+    },
+    {
+      id: 'cookies',
+      title: '9. Cookies',
+      body: (
+        <p>
+          Usamos apenas armazenamento essencial para manter sua sessão e autenticação. Não
+          usamos cookies de publicidade nem de rastreamento.
+        </p>
+      ),
+    },
+    {
+      id: 'alteracoes',
+      title: '10. Alterações',
+      body: (
+        <p>
+          Este texto pode ser atualizado. A data da última atualização aparece no topo da
+          página, e mudanças relevantes serão comunicadas.
+        </p>
+      ),
+    },
+  ]
+}
 
 const termos: Section[] = [
   {
@@ -288,7 +292,9 @@ function Block({
   )
 }
 
-export default function Privacidade() {
+function PrivacidadePage() {
+  const { whatsappNumber } = usePublicSite()
+  const privacidade = useMemo(() => buildPrivacidade(!!whatsappNumber), [whatsappNumber])
   useDocumentTitle(
     'Política de Privacidade e Termos de Uso',
     `Como ${brand.name} trata seus dados pessoais (LGPD) e as regras de uso das aulas.`,
@@ -383,5 +389,13 @@ export default function Privacidade() {
         </Link>
       </footer>
     </div>
+  )
+}
+
+export default function Privacidade() {
+  return (
+    <PublicSiteProvider>
+      <PrivacidadePage />
+    </PublicSiteProvider>
   )
 }

@@ -1,9 +1,9 @@
 import { MessageCircle } from 'lucide-react'
 
-import { brand } from '@/config/brand'
+import { usePublicSite } from './usePublicSite'
 
 export function WhatsAppFloat() {
-  const link = brand.whatsapp.link
+  const link = usePublicSite().whatsappLink
   if (!link) return null
   return (
     <a

@@ -2,8 +2,9 @@ import { MessageCircle } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { brand } from '@/config/brand'
 import { cn } from '@/lib/utils'
+
+import { usePublicSite } from './usePublicSite'
 
 type Props = {
   children: ReactNode
@@ -14,7 +15,7 @@ type Props = {
 
 /** Botão que abre o WhatsApp com mensagem pronta. Some se o número não estiver configurado. */
 export function WhatsAppCta({ children, variant, size, className }: Props) {
-  const link = brand.whatsapp.link
+  const link = usePublicSite().whatsappLink
   if (!link) return null
   return (
     <Button

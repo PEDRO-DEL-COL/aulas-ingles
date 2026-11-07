@@ -3,11 +3,14 @@ import { Link } from 'react-router'
 import { Logo } from '@/components/brand/Logo'
 import { brand } from '@/config/brand'
 
+import { usePublicSite } from './usePublicSite'
+
 const ext = { target: '_blank', rel: 'noopener noreferrer' } as const
 const linkClass = 'underline underline-offset-4'
 
 export function SiteFooter() {
-  const { social, whatsapp } = brand
+  const { social } = brand
+  const { whatsappLink } = usePublicSite()
   return (
     <footer className="border-t border-border/70 bg-lavender/60">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:px-6 md:flex-row md:items-start md:justify-between">
@@ -38,9 +41,9 @@ export function SiteFooter() {
                 Entrar
               </Link>
             </li>
-            {whatsapp.link ? (
+            {whatsappLink ? (
               <li>
-                <a className={linkClass} href={whatsapp.link} {...ext}>
+                <a className={linkClass} href={whatsappLink} {...ext}>
                   WhatsApp
                 </a>
               </li>

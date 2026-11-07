@@ -1,10 +1,11 @@
 import { Check } from 'lucide-react'
 
 import { Reveal } from '@/components/brand/Reveal'
-import { brand, type Plan } from '@/config/brand'
+import { type Plan } from '@/config/brand'
 import { formatBRL } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
+import { usePublicSite } from './usePublicSite'
 import { SectionHeading } from './SectionHeading'
 import { WhatsAppCta } from './WhatsAppCta'
 
@@ -21,6 +22,7 @@ function lessonsPerk(plan: Plan) {
 }
 
 export function Plans() {
+  const { plans, plansSource } = usePublicSite()
   return (
     <section
       id="planos"
@@ -32,7 +34,7 @@ export function Plans() {
           Escolha o jeito que combina com a sua rotina
         </SectionHeading>
         <ul className="grid gap-6 md:grid-cols-3">
-          {brand.plans.map((plan, i) => (
+          {plans.map((plan, i) => (
             <Reveal
               as="li"
               key={plan.id}
@@ -85,8 +87,9 @@ export function Plans() {
           ))}
         </ul>
         <p className="mt-6 text-sm text-muted-foreground">
-          Pagamento por Pix. Valores de exemplo, sujeitos a confirmação na conversa
-          inicial.
+          {plansSource === 'fallback'
+            ? 'Pagamento por Pix. Valores de exemplo, sujeitos a confirmação na conversa inicial.'
+            : 'Pagamento por Pix. Valores sujeitos a confirmação na conversa inicial.'}
         </p>
       </div>
     </section>
