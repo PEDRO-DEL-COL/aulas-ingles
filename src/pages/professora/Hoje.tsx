@@ -12,6 +12,8 @@ import {
   listPendingDecisions,
 } from '@/features/professora/api'
 import { JoinButton } from '@/features/professora/components/JoinButton'
+import { MakeupToScheduleList } from '@/features/professora/components/MakeupToScheduleList'
+import { listMakeupsToSchedule } from '@/features/professora/makeupsApi'
 import { MakeupDecisionCard } from '@/features/professora/components/MakeupDecisionCard'
 import { TeacherStatusBadge } from '@/features/professora/components/TeacherStatusBadge'
 import { reminderLink, type LessonWithStudent } from '@/features/professora/lessons'
@@ -88,6 +90,7 @@ export default function Hoje() {
     return listLessonsBetween(start, end)
   })
   const pending = useQuery('prof-pendentes', listPendingDecisions)
+  const toSchedule = useQuery('prof-repor-agendar', () => listMakeupsToSchedule())
   const overdue = useQuery('prof-atrasadas', countOverdueInvoices)
 
   return (
@@ -174,6 +177,26 @@ export default function Hoje() {
               </li>
             ))}
           </ul>
+        )}
+
+        <h3 className="pt-1 font-semibold">Reposições a agendar</h3>
+        {toSchedule.error ? (
+          <ErrorState error={toSchedule.error} onRetry={toSchedule.refetch} />
+        ) : !toSchedule.data ? (
+          <Skeleton className="h-28 w-full rounded-xl" />
+        ) : toSchedule.data.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Nenhuma reposição esperando agendamento.
+          </p>
+        ) : (
+          <MakeupToScheduleList
+            lessons={toSchedule.data}
+            timezone={timezone}
+            onChanged={() => {
+              toSchedule.refetch()
+              lessons.refetch()
+            }}
+          />
         )}
       </section>
     </div>

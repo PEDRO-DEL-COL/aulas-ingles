@@ -102,3 +102,13 @@ export function reminderLink(
     }),
   )
 }
+
+/** Aulas canceladas (com direito) que ainda não têm reposição criada, em ordem cronológica. */
+export function withoutMakeup<T extends Pick<Lesson, 'id' | 'starts_at'>>(
+  lessons: readonly T[],
+  origins: ReadonlySet<string>,
+): T[] {
+  return lessons
+    .filter((l) => !origins.has(l.id))
+    .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())
+}
