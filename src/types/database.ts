@@ -24,6 +24,77 @@ type LessonStatus =
 type InvoiceStatus = 'em_aberto' | 'pago' | 'atrasado' | 'cancelado'
 type MaterialType = 'drive' | 'pdf' | 'audio' | 'video' | 'link' | 'outro'
 type BillingModel = 'mensalidade' | 'pacote' | 'avulsa'
+type LeadStatus = 'novo' | 'contatado' | 'convertido' | 'descartado'
+
+type ScheduleRow = {
+  id: string
+  student_id: string
+  weekday: number
+  start_time: string
+  timezone: string
+  duration_minutes: number
+  starts_on: string
+  ends_on: string | null
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+type PrivateNoteRow = {
+  id: string
+  student_id: string
+  lesson_id: string | null
+  body: string
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+type PayerRow = {
+  id: string
+  name: string
+  email: string | null
+  phone: string | null
+  document: string | null
+  profile_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+type StudentGuardianRow = {
+  id: string
+  student_id: string
+  guardian_profile_id: string | null
+  guardian_email: string
+  guardian_name: string | null
+  relationship: string | null
+  is_financial_responsible: boolean
+  can_view_lessons: boolean
+  created_at: string
+  updated_at: string
+}
+
+type BlockedDateRow = {
+  id: string
+  starts_on: string
+  ends_on: string
+  reason: string | null
+  created_at: string
+  updated_at: string
+}
+
+type LeadRow = {
+  id: string
+  name: string
+  contact: string
+  message: string | null
+  source: string | null
+  status: LeadStatus
+  consent: boolean
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
 
 type StudentRow = {
   id: string
@@ -225,6 +296,44 @@ export type Database = {
         Update: Partial<InvoiceRow>
         Relationships: []
       }
+      schedules: {
+        Row: ScheduleRow
+        Insert: Partial<ScheduleRow> &
+          Pick<ScheduleRow, 'student_id' | 'weekday' | 'start_time'>
+        Update: Partial<ScheduleRow>
+        Relationships: []
+      }
+      private_notes: {
+        Row: PrivateNoteRow
+        Insert: Partial<PrivateNoteRow> & Pick<PrivateNoteRow, 'student_id' | 'body'>
+        Update: Partial<PrivateNoteRow>
+        Relationships: []
+      }
+      payers: {
+        Row: PayerRow
+        Insert: Partial<PayerRow> & Pick<PayerRow, 'name'>
+        Update: Partial<PayerRow>
+        Relationships: []
+      }
+      student_guardians: {
+        Row: StudentGuardianRow
+        Insert: Partial<StudentGuardianRow> &
+          Pick<StudentGuardianRow, 'student_id' | 'guardian_email'>
+        Update: Partial<StudentGuardianRow>
+        Relationships: []
+      }
+      blocked_dates: {
+        Row: BlockedDateRow
+        Insert: Partial<BlockedDateRow> & Pick<BlockedDateRow, 'starts_on' | 'ends_on'>
+        Update: Partial<BlockedDateRow>
+        Relationships: []
+      }
+      leads: {
+        Row: LeadRow
+        Insert: Partial<LeadRow> & Pick<LeadRow, 'name' | 'contact'>
+        Update: Partial<LeadRow>
+        Relationships: []
+      }
       settings: {
         Row: SettingsRow
         Insert: Partial<SettingsRow>
@@ -254,6 +363,18 @@ export type Database = {
         Args: { p_lesson_id: string; p_reason?: string; p_by_teacher?: boolean }
         Returns: LessonRow
       }
+      generate_lessons: {
+        Args: { p_from: string; p_to: string }
+        Returns: number
+      }
+      decide_makeup: {
+        Args: { p_lesson_id: string; p_eligible: boolean }
+        Returns: LessonRow
+      }
+      schedule_makeup: {
+        Args: { p_original_lesson: string; p_starts_at: string; p_duration?: number }
+        Returns: LessonRow
+      }
       makeups_used_in_month: {
         Args: { p_student: string; p_month: string }
         Returns: number
@@ -266,6 +387,7 @@ export type Database = {
       invoice_status: InvoiceStatus
       material_type: MaterialType
       billing_model: BillingModel
+      lead_status: LeadStatus
     }
     CompositeTypes: {
       [_ in never]: never
