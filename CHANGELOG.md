@@ -6,6 +6,16 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.5.0] - 2026-11-07
+
+### Adicionado
+
+- Login com Google via Supabase Auth (PKCE) e página de callback.
+- `AuthProvider`/`useAuth`, carregado só nas rotas logadas (a landing não baixa o supabase-js).
+- Guarda de rotas por papel (aluno, professora, admin), com retorno seguro à página de origem.
+- Telas "Acesso não liberado" (com orientação para criar conta Google) e aceite de termos no primeiro acesso.
+- Layout da área logada; tudo degrada com mensagem clara quando o Supabase não está configurado.
+
 ## [0.4.0] - 2026-11-07
 
 ### Adicionado
@@ -55,7 +65,8 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 - ESLint (type-aware), Prettier, Vitest e scripts `dev`, `build`, `lint`, `typecheck`, `test`, `format`.
 - `.env.example`, `_redirects` para SPA no Cloudflare Pages, README em pt-BR, `CLAUDE.md` e briefing do projeto.
 
-[Não publicado]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.4.0...HEAD
+[Não publicado]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.1.0...v0.2.0
