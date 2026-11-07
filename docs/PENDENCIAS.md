@@ -61,7 +61,7 @@ Para o backup semanal e a consulta contra a pausa do Supabase vou precisar que v
 
 - O Node instalado é o 22.3. Recomendo atualizar para o **Node 22 LTS mais recente (≥ 22.12)**: as versões novas do Vite (7/8) e do Vitest exigem isso. Hoje o projeto usa Vite 6 e Vitest 3 para funcionar no 22.3.
 - Copie `.env.example` para `.env` e preencha.
-- Os avisos do `npm audit` são de ferramentas de desenvolvimento (Vitest e typescript-eslint), não vão para o site publicado. A correção do Vitest exige a versão 4/5, que pede Node ≥ 22.12: atualize o Node e rode `npm i -D vitest@latest`.
+- `npm audit`: o aviso do `minimatch` foi corrigido com `overrides` no `package.json`. Restam avisos do **Vitest 3** (`@vitest/mocker` e `tinypool`), usado só para rodar testes locais — nada disso vai para o site publicado. A correção é o Vitest ≥ 4.1.12, mas o npm 10.8 desta máquina falha ao resolver as dependências (erro `edgesOut`). Depois de atualizar Node/npm, rode `npm i -D vitest@latest` e `npm test`.
 
 ## 6. Conteúdo a revisar antes de divulgar
 
