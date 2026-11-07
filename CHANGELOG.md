@@ -6,6 +6,25 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.4.0] - 2026-11-07
+
+### Adicionado
+
+- Nova identidade visual: paleta suave (lavanda, pêssego, sálvia, creme) com contraste AA testado, fonte Nunito auto-hospedada, logo em SVG, ilustrações SVG e microanimações que respeitam `prefers-reduced-motion`.
+- Landing refeita com a nova identidade; planos de exemplo para mensalidade, pacote e aula avulsa; FAQ sobre aulas individuais e conta Google.
+- Política de cancelamento e reposição aplicada no banco: com reposição a partir de 24h (configurável), faixa intermediária opcional, falta sem reposição, limite de reposições por mês; RPCs `cancel_lesson`, `decide_makeup`, `schedule_makeup` e `makeups_used_in_month`.
+- Testes pgTAP das regras de cancelamento; `docs/CONTA-GOOGLE.md`.
+
+### Alterado
+
+- Responsável deixa de ser perfil de login (fica como dado da ficha: pagador e consentimento de menor).
+- Só admin edita configurações, planos/valores, papéis e exclusões; professora edita alunos, aulas, agenda, materiais e financeiro.
+- E-mail da ficha do aluno precisa ter formato válido e ser de uma conta Google.
+
+### Segurança
+
+- Override do `minimatch` para versão corrigida (dependência de desenvolvimento).
+
 ## [0.3.0] - 2026-11-07
 
 ### Adicionado
@@ -36,7 +55,8 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 - ESLint (type-aware), Prettier, Vitest e scripts `dev`, `build`, `lint`, `typecheck`, `test`, `format`.
 - `.env.example`, `_redirects` para SPA no Cloudflare Pages, README em pt-BR, `CLAUDE.md` e briefing do projeto.
 
-[Não publicado]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.3.0...HEAD
+[Não publicado]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/releases/tag/v0.1.0
