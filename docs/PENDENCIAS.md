@@ -61,6 +61,7 @@ Para o backup semanal e a consulta contra a pausa do Supabase vou precisar que v
 
 - O Node instalado é o 22.3. Recomendo atualizar para o **Node 22 LTS mais recente (≥ 22.12)**: as versões novas do Vite (7/8) e do Vitest exigem isso. Hoje o projeto usa Vite 6 e Vitest 3 para funcionar no 22.3.
 - Copie `.env.example` para `.env` e preencha.
+- Os avisos do `npm audit` são de ferramentas de desenvolvimento (Vitest e typescript-eslint), não vão para o site publicado. A correção do Vitest exige a versão 4/5, que pede Node ≥ 22.12: atualize o Node e rode `npm i -D vitest@latest`.
 
 ## 6. Conteúdo a revisar antes de divulgar
 
@@ -70,15 +71,26 @@ Para o backup semanal e a consulta contra a pausa do Supabase vou precisar que v
 - `index.html`: título e tags Open Graph estão fixos com o nome provisório.
 - **Privacidade e Termos** (`src/pages/Privacidade.tsx`): é um rascunho; precisa de revisão, idealmente por um profissional, e dos dados reais da controladora, prazo de retenção e política de cancelamento.
 
-## 7. Decisões em aberto (perguntas)
+## 7. Decisões tomadas (rodada 2)
 
-1. **Modelo de cobrança:** mensalidade fixa, pacote de aulas ou aula avulsa? (O banco já aceita os três: `billing_model` em `plans` e `invoices`.)
-2. **Ela dá aula para menores de idade?** Se sim, o perfil "responsável" e o consentimento do responsável entram no MVP.
-3. **Todos os alunos têm conta Google?** Quem não tiver precisará criar uma (o login é só Google).
-4. **Só aulas individuais ou também em grupo?** O modelo atual é 1 aluno por aula.
-5. **Qual chave Pix aparece e em nome de quem?** (tipo da chave, nome e cidade do recebedor — vão para a tabela `settings`.)
-6. **Quantos alunos hoje e em um ano? Algum mora fora do Brasil?** (impacta fuso horário e forma de pagamento.)
-7. **Política de cancelamento e reposição:** com quantas horas de antecedência pode remarcar sem custo? Falta conta como aula dada? Quantas reposições por mês?
-8. **Nome do negócio, identidade visual (logo, cores, fotos) e se vale pagar o domínio `.com.br`** (~R$ 40/ano).
-9. **Quem é o responsável financeiro deve ser o único a ver as cobranças?** Hoje qualquer responsável vinculado ao aluno vê o financeiro (fácil de restringir).
-10. **A professora pode editar as configurações (Pix, política)** ou só o admin? Hoje professora e admin podem; trocar papéis e liberar/desativar usuários é só do admin.
+| Tema             | Decisão                                                                                                                                                                | Onde está no código                                                       |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Cobrança         | Os 3 modelos (mensalidade, pacote, avulsa), sem custo                                                                                                                  | `billing_model` em `plans`/`invoices`; planos de exemplo em `brand.ts`    |
+| Menores de idade | Podem existir; o responsável é só **dado na ficha** (pagador/consentimento), **sem login**                                                                             | `student_guardians`, `payers`, `students.consent_by_guardian_at`          |
+| Conta Google     | Obrigatória para o aluno                                                                                                                                               | [CONTA-GOOGLE.md](CONTA-GOOGLE.md) e tela "Acesso não liberado"           |
+| Aulas            | Só individuais                                                                                                                                                         | `lessons.student_id` obrigatório                                          |
+| Pix              | Ainda não existe: campos vazios em `settings`; a tela mostra "Pix ainda não configurado"                                                                               | `settings.pix_key` (nullable)                                             |
+| Fuso             | Todos no Brasil; padrão `America/Sao_Paulo` (campo mantido)                                                                                                            | `profiles.timezone`, `schedules.timezone`                                 |
+| Cancelamento     | ≥ 24h: com reposição; < 24h: sem; falta: sem; máx. 2 reposições/mês; faixa intermediária opcional (desligada). Aplicado **no banco**                                   | `settings.*`, triggers e RPCs em `20261108000004_cancellation_policy.sql` |
+| Domínio          | Só gratuito: `<nome>.pages.dev`                                                                                                                                        | Cloudflare Pages                                                          |
+| Perfis           | aluno, professora, admin. Professora edita alunos, aulas, materiais, agenda e financeiro; **só admin** edita regras, política, planos/valores, Pix, papéis e exclusões | `20261108000003_rls_roles.sql`                                            |
+
+## 8. Perguntas que ainda restam
+
+1. **Confirmar interpretação do financeiro do aluno:** só professora e admin acessam a _gestão_ financeira (lançar cobrança, marcar pago, ver a lista geral). O aluno vê **somente as próprias cobranças** (valor, vencimento, status) e o Pix, apenas leitura, e pode clicar em "Já paguei" (só avisa). Está certo assim?
+2. **Mês da reposição:** o limite de 2 reposições conta pelo mês **em que a reposição acontece** (não o mês da aula cancelada). Ok?
+3. **Faixa intermediária de cancelamento:** se ligada, cancelamentos entre X h e 24 h ficam "a critério da professora". Querem usar? Com qual X?
+4. **Reposição de reposição:** se o aluno cancelar uma reposição com ≥ 24h, ganha nova reposição (contando no limite). Ok?
+5. **Nome do negócio e da professora, foto, textos e preços reais**, e o subdomínio desejado em `pages.dev`.
+6. **Chave Pix** (tipo, nome e cidade do recebedor) quando existir.
+7. **Revisão jurídica** do texto de Privacidade e Termos.
