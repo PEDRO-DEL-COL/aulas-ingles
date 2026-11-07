@@ -6,6 +6,17 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.3.0] - 2026-11-07
+
+### Adicionado
+
+- Migrations do Supabase: enums, 14 tabelas (incluindo `payers` e `student_guardians` para separar pagador e responsável do aluno), view `invoices_with_status`, triggers e RPCs (`mark_invoice_as_paid_notice`, `accept_terms`, `generate_lessons`).
+- Row Level Security em todas as tabelas: aluno só vê o próprio, responsável vê o do aluno vinculado, professora/admin veem tudo, `private_notes` só para staff, `leads` com inserção pública.
+- Gatilho que liga `auth.users` à ficha em `students`/`student_guardians` pelo e-mail (confirmado) no primeiro login, ou quando a ficha é criada depois.
+- Testes pgTAP das políticas (`supabase/tests/rls.test.sql`).
+- `src/lib/supabase.ts` (cliente sob demanda, só chave anon) e `src/lib/pix.ts` (BR Code Pix com CRC16, com testes usando o exemplo do manual do Banco Central).
+- `docs/PENDENCIAS.md` com o passo a passo do que depende do usuário e as decisões em aberto.
+
 ## [0.2.0] - 2026-11-07
 
 ### Adicionado
@@ -25,6 +36,7 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 - ESLint (type-aware), Prettier, Vitest e scripts `dev`, `build`, `lint`, `typecheck`, `test`, `format`.
 - `.env.example`, `_redirects` para SPA no Cloudflare Pages, README em pt-BR, `CLAUDE.md` e briefing do projeto.
 
-[Não publicado]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.2.0...HEAD
+[Não publicado]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/PEDRO-DEL-COL/aulas-ingles/releases/tag/v0.1.0
