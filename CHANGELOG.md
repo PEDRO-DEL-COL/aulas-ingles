@@ -6,6 +6,14 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.16.0] - 2026-11-07
+
+### Adicionado
+
+- Formulário "Quero uma aula experimental" na landing (nome, WhatsApp, mensagem, consentimento), com honeypot e tempo mínimo anti-robô, enviado por `fetch` REST com a anon key (sem supabase-js na landing).
+- Tela Interessados da professora: filtro por situação, busca, abrir WhatsApp com mensagem pronta, marcar contatado/descartado, anotações e "Converter em aluno" (pré-preenche a ficha e marca o interessado como convertido).
+- Migration `20261117000001_leads_guard.sql` (limite de repetição e de envios por hora) e testes pgTAP `leads_guard.test.sql`.
+
 ## [0.15.0] - 2026-11-07
 
 ### Adicionado

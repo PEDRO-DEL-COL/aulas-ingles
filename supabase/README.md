@@ -20,6 +20,7 @@ SQL versionado do projeto. Nunca altere tabelas só pelo painel; crie uma nova m
 14. `20261114000001_monthly_invoices_batch.sql`: RPC `generate_monthly_invoices(p_month, p_due_day, p_dry_run)` (só staff): prévia ou geração idempotente das mensalidades do mês para alunos ativos com plano de mensalidade ativo.
 15. `20261115000001_plan_benefits_due_day.sql`: tabelas `benefits` (catálogo de vantagens, rótulo único sem diferenciar maiúsculas) e `plan_benefits` (vantagens de cada plano, com ordem); leitura por usuário ativo, escrita só admin; `public_site_info` passa a incluir `benefits` dos planos ativos; `settings.default_due_day` (1–31, só admin).
 16. `20261116000001_teacher_availability.sql`: tabela `availability_slots` (dia da semana, início, fim, fuso, ativo; só staff); função `check_makeup_slot` e trigger `lessons_makeup_availability`: reposição só dentro de uma faixa ativa e fora de férias/feriados (sem nenhuma faixa ativa, só férias/feriados valem).
+17. `20261117000001_leads_guard.sql`: trigger `leads_rate_limit` no formulário público de interessados: o mesmo contato não reenvia em 10 minutos e no máximo 30 por hora (só chamadas anon/aluno; staff e SQL editor passam).
 
 As migrations 1 a 8 já foram aplicadas no projeto remoto: não edite; mudanças vão em arquivos novos com timestamp maior (`supabase migration new nome`). Todas são idempotentes.
 
