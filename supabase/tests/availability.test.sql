@@ -1,5 +1,5 @@
 -- pgTAP: disponibilidade da professora e reposicao so dentro dela e fora de ferias
--- (migrations 20261116000001 e 20261118000001).
+-- (migrations 20261116000001, 20261118000001 e 20261119000001).
 -- Roda numa transacao com ROLLBACK (supabase test db).
 
 begin;
@@ -64,9 +64,10 @@ select throws_ok($$select public.schedule_makeup('11111111-0000-0000-0000-000000
 select throws_ok($$update public.lessons set starts_at = '2027-04-13 13:00+00'
                    where rescheduled_from = '11111111-0000-0000-0000-000000000002'$$,
                  '23514', null, 'mover reposicao para fora da faixa e rejeitado');
--- Aula comum (nao reposicao) nao passa pela regra.
-select lives_ok($$insert into public.lessons (student_id, starts_at) values ('a0000000-0000-0000-0000-00000000000a', '2027-04-13 13:00+00')$$,
-                'aula comum fora da faixa continua permitida');
+-- Desde a migration 19 a regra vale para qualquer aula agendada, nao so reposicao.
+select throws_ok($$insert into public.lessons (student_id, starts_at) values ('a0000000-0000-0000-0000-00000000000a', '2027-04-13 13:00+00')$$,
+                 '23514', 'aula fora da disponibilidade da professora: escolha um horario disponivel',
+                 'aula comum fora da faixa tambem e rejeitada (migration 19)');
 reset role;
 
 select pg_temp.as_user('a1000000-0000-0000-0000-00000000000a');
