@@ -203,7 +203,7 @@ export function WeekView({
         <div
           ref={drag.bindContainer}
           {...drag.handlers}
-          className="grid grid-cols-[3.25rem_minmax(0,1fr)] select-none md:grid-cols-[3.25rem_repeat(7,minmax(0,1fr))]"
+          className="mt-3 grid grid-cols-[3.25rem_minmax(0,1fr)] select-none md:grid-cols-[3.25rem_repeat(7,minmax(0,1fr))]"
           style={{ height }}
         >
           <div className="relative" aria-hidden="true">
@@ -213,7 +213,7 @@ export function WeekView({
                 className="absolute right-1.5 -translate-y-1/2 text-[11px] text-muted-foreground"
                 style={{ top: (m - gridStart) * PX }}
               >
-                {m === gridStart ? '' : minuteToTime(m)}
+                {minuteToTime(m)}
               </span>
             ))}
           </div>
