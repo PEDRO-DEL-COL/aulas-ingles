@@ -3,6 +3,7 @@ import { Faq } from '@/components/landing/Faq'
 import { FinalCta } from '@/components/landing/FinalCta'
 import { Hero } from '@/components/landing/Hero'
 import { HowItWorks } from '@/components/landing/HowItWorks'
+import { LeadForm } from '@/components/landing/LeadForm'
 import { PublicSiteProvider } from '@/components/landing/PublicSiteProvider'
 import { Plans } from '@/components/landing/Plans'
 import { SiteFooter } from '@/components/landing/SiteFooter'
@@ -30,6 +31,7 @@ export default function Landing() {
         <Plans />
         <Testimonials />
         <Faq />
+        <LeadForm />
         <FinalCta />
       </main>
       <SiteFooter />
