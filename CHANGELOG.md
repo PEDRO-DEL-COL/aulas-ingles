@@ -6,6 +6,14 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.17.0] - 2026-11-07
+
+### Adicionado
+
+- Planilhas (`/app/professora/planilhas`, em Mais e em Alunos): importar alunos por CSV com modelo para baixar, instruções para Excel e Google Planilhas, validação linha a linha (e-mail Google obrigatório, duplicados, telefone, plano pelo nome), prévia com erros e importação idempotente (e-mails já cadastrados são pulados).
+- Exportar alunos, aulas e pagamentos em CSV (separador `;` e BOM para abrir certo no Excel; proteção contra fórmulas).
+- Parser/serializador CSV próprio (sem dependências), carregado só nessa tela.
+
 ## [0.16.0] - 2026-11-07
 
 ### Adicionado
