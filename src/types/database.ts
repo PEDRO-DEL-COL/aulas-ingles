@@ -1,6 +1,6 @@
 /**
  * Tipos do banco, ESCRITOS À MÃO no formato de `supabase gen types typescript`,
- * espelhando supabase/migrations até 20261118000001_availability_calendar.sql.
+ * espelhando supabase/migrations até 20261119000001_availability_primary_rule.sql.
  *
  * Por que à mão: gerar exige um Postgres com as migrations aplicadas — o projeto
  * remoto (`--linked`, só quem tem acesso ao painel deve rodar) ou um banco local
@@ -477,6 +477,11 @@ export type Database = {
       schedule_makeup: {
         Args: { p_original_lesson: string; p_starts_at: string; p_duration?: number }
         Returns: LessonRow
+      }
+      generate_recurring_lessons: {
+        Args: { p_from: string; p_to: string }
+        /** { created, skipped_total, skipped: [{ student_id, student_name, starts_at, duration_minutes, reason }] } */
+        Returns: Json
       }
       is_slot_available: {
         Args: { p_starts_at: string; p_duration: number }
