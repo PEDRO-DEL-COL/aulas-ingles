@@ -2,6 +2,8 @@
 
 Site estático (SPA) para aulas particulares de inglês: landing page, login de alunos, área da professora e área de administração. Interface em português do Brasil, mobile first.
 
+> Código aberto para leitura/portfólio; uso, cópia e redistribuição não autorizados sem permissão ([LICENSE](./LICENSE)).
+
 Contexto e decisões: [PROJETO.md](./PROJETO.md). Pendências: [docs/PENDENCIAS.md](./docs/PENDENCIAS.md).
 
 ## Stack
@@ -66,4 +68,4 @@ Banco de dados: veja [supabase/README.md](supabase/README.md). Para aplicar e te
 
 ## Licença
 
-Todos os direitos reservados.
+Código aberto para leitura/portfólio; uso, cópia e redistribuição não autorizados sem permissão. Todos os direitos reservados a Pedro Del Col (2026). Veja [LICENSE](./LICENSE).

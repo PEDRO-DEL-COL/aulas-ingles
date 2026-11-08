@@ -176,4 +176,6 @@ Por que não Vercel: o plano gratuito proíbe uso comercial, e anunciar a venda 
 
 **Commits e versões:** Conventional Commits em português (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`), pequenos e atômicos; rodapé `Co-Authored-By:` do modelo que escreveu. SemVer com tags anotadas (`vX.Y.Z`) + GitHub Release; registrar mudanças em `CHANGELOG.md` (Keep a Changelog).
 
+**Licença:** repositório público só para leitura/portfólio, sem licença de reuso (`LICENSE`: todos os direitos reservados, Pedro Del Col, 2026). Não adicionar licença open source nem dizer que o projeto é open source.
+
 **Segredos:** só variáveis `VITE_*` públicas no front (URL e anon key do Supabase, número do WhatsApp). Nunca commitar `.env` nem a service role key.
