@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { Outlet } from 'react-router'
 
 import { AuthProvider } from '@/lib/auth/AuthProvider'
+import { ViewAsProvider } from '@/lib/auth/ViewAsProvider'
 
 import { LoadingScreen } from './AuthScreen'
 
@@ -9,9 +10,11 @@ import { LoadingScreen } from './AuthScreen'
 export default function AuthLayout() {
   return (
     <AuthProvider>
-      <Suspense fallback={<LoadingScreen />}>
-        <Outlet />
-      </Suspense>
+      <ViewAsProvider>
+        <Suspense fallback={<LoadingScreen />}>
+          <Outlet />
+        </Suspense>
+      </ViewAsProvider>
     </AuthProvider>
   )
 }
