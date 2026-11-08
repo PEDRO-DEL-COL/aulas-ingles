@@ -6,6 +6,19 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.21.0] - 2026-11-08
+
+### Adicionado
+
+- Migration `20261119000001_availability_primary_rule.sql`: a disponibilidade (horário padrão + exceções − férias/feriados/bloqueios, função única `is_slot_available`) passa a ser a regra de **todas** as aulas: avulsas, geradas pelos horários fixos, reposições e remarcações. Aulas existentes não são invalidadas; a geração recorrente pula e relata o que não cabe (`generate_recurring_lessons`). Testes pgTAP `availability_primary.test.sql`.
+- Alerta forte "Você ainda não definiu o horário padrão" no Calendário e em Hoje enquanto não houver horário padrão (até lá o banco aceita qualquer horário fora de férias/feriados).
+- Calendário: "Nova aula" avulsa e "Remarcar" com horários sugeridos que cabem na disponibilidade; reposição também mostra os horários possíveis.
+- Gerar aulas mostra as ocorrências puladas (aluno, data/hora, motivo); horário fixo do aluno avisa quando não cabe na disponibilidade nas próximas 8 semanas.
+
+### Corrigido
+
+- Rótulo da primeira hora cortado no topo da grade da semana.
+
 ## [0.20.0] - 2026-11-08
 
 ### Adicionado
