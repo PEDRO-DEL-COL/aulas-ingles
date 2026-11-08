@@ -6,6 +6,20 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.13.0] - 2026-11-07
+
+### Adicionado
+
+- Seletor "Ver como" (Aluno / Professora / Admin) logo abaixo do botão "Sair", só para admin real: troca menus, rotas e telas para as do papel escolhido e leva à home dele; aviso permanente "Visualizando como … — só prévia" com atalho para voltar a Admin; escolha salva no navegador e validada. Não altera o papel no banco nem a RLS.
+- Pré-visualização da área do aluno pelo admin: escolha de um aluno real, somente leitura (ações de escrita desabilitadas).
+- Placeholders "Em breve" para Interessados, Meu perfil (professora) e Backup e exportação; menu "Mais" do admin.
+
+### Alterado
+
+- Guardas de rota decidem pelo papel efetivo (real para aluno e professora; o escolhido no seletor para admin); "termos" e "acesso não liberado" continuam pelo perfil real.
+- Navegação do admin: Usuários, Planos, Políticas, Pix e contato e Mais (a área da professora fica em Mais).
+- Área do aluno filtra materiais e o detalhe da aula pelo aluno explicitamente (antes dependia só da RLS).
+
 ## [0.12.0] - 2026-11-07
 
 ### Adicionado
