@@ -1,4 +1,6 @@
 /** Disponibilidade da professora (availability_slots). RLS: só staff. */
+import { getTeacherTimezone } from '@/features/calendar/api'
+import { dayKey } from '@/features/shared/datetime'
 import { friendlyError } from '@/features/shared/errors'
 import { getSupabase } from '@/lib/supabase'
 import type { Tables } from '@/types/database'
@@ -22,6 +24,35 @@ export async function listSlots(): Promise<AvailabilitySlot[]> {
   return data
 }
 
+/** Padrão ativo sem fim mais antigo; se não existir, cria o "Horário padrão" (hoje, sem fim). */
+async function ensureDefaultPatternId(): Promise<string> {
+  const sb = getSupabase()
+  const found = await sb
+    .from('availability_patterns')
+    .select('id')
+    .eq('active', true)
+    .is('ends_on', null)
+    .order('starts_on', { ascending: true })
+    .order('created_at', { ascending: true })
+    .limit(1)
+  if (found.error) fail(found.error, 'Não foi possível salvar a faixa. Tente de novo.')
+  const existing = found.data[0]
+  if (existing) return existing.id
+  const timezone = await getTeacherTimezone()
+  const created = await sb
+    .from('availability_patterns')
+    .insert({
+      name: 'Horário padrão',
+      starts_on: dayKey(new Date(), timezone),
+      ends_on: null,
+    })
+    .select('id')
+    .single()
+  if (created.error)
+    fail(created.error, 'Não foi possível salvar a faixa. Tente de novo.')
+  return created.data.id
+}
+
 export async function saveSlot(input: SlotFormValues, id?: string): Promise<void> {
   const row = {
     weekday: Number(input.weekday),
@@ -31,7 +62,9 @@ export async function saveSlot(input: SlotFormValues, id?: string): Promise<void
   }
   const query = id
     ? getSupabase().from('availability_slots').update(row).eq('id', id)
-    : getSupabase().from('availability_slots').insert(row)
+    : getSupabase()
+        .from('availability_slots')
+        .insert({ ...row, pattern_id: await ensureDefaultPatternId() })
   const { error } = await query
   if (error) fail(error, 'Não foi possível salvar a faixa. Tente de novo.')
 }
