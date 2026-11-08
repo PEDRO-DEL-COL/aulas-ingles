@@ -19,6 +19,7 @@ SQL versionado do projeto. Nunca altere tabelas só pelo painel; crie uma nova m
 13. `20261113000001_blocked_dates_cancel.sql`: inserir/alterar datas em `blocked_dates` cancela as aulas `agendada`/`reposicao` futuras do período (data local) como `cancelada_professora` (com reposição), com `cancel_reason` e `lessons.blocked_date_id`; reposição cuja origem foi cancelada pela professora não conta no limite mensal (`makeups_counted_in_month`, usada pelo trigger e por `makeups_used_in_month`).
 14. `20261114000001_monthly_invoices_batch.sql`: RPC `generate_monthly_invoices(p_month, p_due_day, p_dry_run)` (só staff): prévia ou geração idempotente das mensalidades do mês para alunos ativos com plano de mensalidade ativo.
 15. `20261115000001_plan_benefits_due_day.sql`: tabelas `benefits` (catálogo de vantagens, rótulo único sem diferenciar maiúsculas) e `plan_benefits` (vantagens de cada plano, com ordem); leitura por usuário ativo, escrita só admin; `public_site_info` passa a incluir `benefits` dos planos ativos; `settings.default_due_day` (1–31, só admin).
+16. `20261116000001_teacher_availability.sql`: tabela `availability_slots` (dia da semana, início, fim, fuso, ativo; só staff); função `check_makeup_slot` e trigger `lessons_makeup_availability`: reposição só dentro de uma faixa ativa e fora de férias/feriados (sem nenhuma faixa ativa, só férias/feriados valem).
 
 As migrations 1 a 8 já foram aplicadas no projeto remoto: não edite; mudanças vão em arquivos novos com timestamp maior (`supabase migration new nome`). Todas são idempotentes.
 
@@ -58,6 +59,10 @@ Trigger `lessons_makeup_rules` (reposição = `status 'reposicao'` com `reschedu
 - Limite `max_makeups_per_month` por aluno no **mês civil da data da reposição** (`starts_at`, fuso `America/Sao_Paulo` fixo no código), não o mês da aula cancelada. Não contam para o limite: reposição cancelada pela professora e reposição cancelada pelo aluno com direito a nova reposição. Se uma reposição for cancelada com direito, ela própria vira origem da próxima (encadeamento).
 - Não contam também (desde a migration 13) reposições cuja **aula de origem foi cancelada pela professora** (inclusive por férias/feriado): o cancelamento foi dela.
 - Fora isso, o limite não tem exceção por staff; para liberar mais, o admin sobe `max_makeups_per_month`.
+
+## Disponibilidade e reposição
+
+Reposição (`status = 'reposicao'`) só pode ser criada ou movida para um horário que caiba inteiro numa faixa ativa de `availability_slots` (dia da semana e horário locais do fuso da faixa) e fora de `blocked_dates`. Enquanto não houver nenhuma faixa ativa, só a regra de férias/feriados vale. O front consulta antes com `rpc('check_makeup_slot', { p_starts_at, p_duration })` (`ok` / `bloqueado` / `fora_disponibilidade`). Base da futura agenda virtual.
 
 ## Férias e feriados
 

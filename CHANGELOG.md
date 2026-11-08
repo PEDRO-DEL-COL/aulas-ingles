@@ -6,6 +6,14 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.15.0] - 2026-11-07
+
+### Adicionado
+
+- Disponibilidade da professora (`/app/professora/disponibilidade`, em Mais): faixas semanais por dia (adicionar, editar, ativar/desativar, excluir), aviso de sobreposição e de quando ainda não há faixas.
+- Reposição só dentro da disponibilidade e fora de férias/feriados, no banco (trigger) e na tela de agendar reposição (dica das faixas do dia e checagem antes de enviar, com mensagem clara).
+- Migration `20261116000001_teacher_availability.sql` e testes pgTAP `availability.test.sql`.
+
 ## [0.14.0] - 2026-11-07
 
 ### Adicionado
