@@ -97,21 +97,25 @@ Para o backup semanal e a consulta contra a pausa do Supabase vou precisar que v
 
 ## 9. Migrations a aplicar no Supabase remoto
 
-Já aplicadas: todas até `20261117000001_leads_guard`.
+Já aplicadas: todas até `20261118000001_availability_calendar`.
 
-Pendente (v0.19.0):
+Pendente (v0.21.0):
 
-1. `20261118000001_availability_calendar.sql` — horário padrão com vigência (`availability_patterns`), `availability_slots.pattern_id` (faixas existentes viram um padrão sem fim), exceções por data (`availability_exceptions`), `settings.teacher_timezone` e a regra única `availability_minutes` / `is_slot_available` (reposição passa a usá-la). Usa `int4multirange`/`range_agg` (Postgres 14+).
+1. `20261119000001_availability_primary_rule.sql` — disponibilidade como regra primária de todas as aulas (trigger `lessons_availability_rule`), geração recorrente que pula e relata (`generate_recurring_lessons`).
 
-Testes pgTAP (`availability_calendar` e os anteriores) ainda não foram executados (sem Docker).
+Testes pgTAP ainda não executados (sem Docker).
 
 Atenção (já vigente): excluir o login do último admin ativo é bloqueado pelo banco; promova outro admin antes.
 
-## 9.1 Topologia do git (rodada 7)
+## 9.1 Topologia do git
 
-- `origin/main` está na **v0.17.0**. A **v0.18.0** (GitHub Actions + `docs/BACKUP.md`) existe só na `main` **local**, aguardando o escopo `workflow` do token (`gh auth refresh -h github.com -s workflow`).
-- A linha do calendário está na branch **`calendario`** (pública), criada a partir de `origin/main` (v0.17.0), com as tags **v0.19.0** e **v0.20.0**. Por isso o CHANGELOG dessa branch não tem a seção 0.18.0.
-- Para juntar depois: com o escopo liberado, fazer merge de `calendario` na `main` local (conflitos esperados só em `CHANGELOG.md`, `package.json`/`package-lock.json` e `docs/PENDENCIAS.md`) e dar push de `main` + tag `v0.18.0`.
+- `origin/main` está na **v0.17.0**. A `main` **local** tem a **v0.18.0** (GitHub Actions + `docs/BACKUP.md`), sem push, aguardando o escopo `workflow` (`gh auth refresh -h github.com -s workflow`). Na rodada 8 o backup foi redesenhado nessa linha (envio do `.gpg` para um repositório **privado** com `BACKUP_REPO`/`BACKUP_REPO_TOKEN`, sem artefato público) e a tag local `v0.18.0` foi movida para incluir isso (nunca foi publicada).
+- A linha do calendário está na branch pública **`calendario`** (parte da v0.17.0) com as tags **v0.19.0, v0.20.0, v0.21.0 e v0.21.1**. O CHANGELOG dessa branch não tem a seção 0.18.0.
+- Para juntar: com o escopo liberado, merge de `calendario` na `main` local (conflitos esperados em `CHANGELOG.md`, `package.json`/`package-lock.json` e `docs/PENDENCIAS.md`) e push de `main` + tag `v0.18.0`.
+
+## 9.2 Varredura de segredos (rodada 8)
+
+`git log --all -p` (inclui a `main` local) procurado por `sbp_`, `sb_secret_`, `service_role`, `GOCSPX-`, JWT (`eyJhbGciOiJIUzI1NiIs…`), URLs `postgres://usuario:senha@`, `ghp_`/`github_pat_`, chaves AWS, chaves privadas PEM e `senha/password = "…"`: **nenhum segredo encontrado**. `service_role` aparece só em textos dizendo para não usá-la. O único arquivo `.env*` já versionado é `.env.example`, com URL e anon key vazias e um número de WhatsApp fictício. `.env`, `.env.*` (exceto o exemplo) estão no `.gitignore`.
 
 ## 10. Decisões da rodada 4 (respondidas)
 
@@ -156,9 +160,15 @@ Decididas pelo usuário; ainda **não implementadas**, salvo o item 1:
 - Validar todas as migrations e os testes pgTAP num Supabase local (`supabase start` + `supabase test db`) e testar o fluxo completo com 2 ou 3 alunos reais.
 - Regenerar `src/types/database.ts` a partir do banco (hoje escrito à mão; ver `supabase/README.md`).
 
-## 15. Perguntas em aberto
+## 15. Decisões da rodada 8
 
-1. Disponibilidade vazia: manter "dia inteiro disponível" enquanto não há horário padrão, ou bloquear tudo até haver padrão?
-2. A regra de disponibilidade deve valer também para aulas avulsas e horários fixos (hoje só reposições)?
-3. Destino do backup (repositório privado ou outro destino) e liberação do escopo `workflow`.
-4. As decisões da seção 13 (duração 60 min, 09–17 seg–sex, Carnaval/Corpus Christi facultativos) estão boas?
+1. **Sem horário padrão:** o banco continua **permissivo** (qualquer horário fora de férias/feriados/dias fechados/bloqueios) para não travar a operação; o app mostra um alerta forte e persistente no Calendário e em Hoje até existir um padrão. Motivo: bloquear tudo impediria gerar aulas e marcar reposições antes de a professora configurar, e a migração não deve quebrar o que já existe.
+2. **Disponibilidade é a regra primária** de todas as aulas (avulsas, horários fixos, reposições e remarcações), no banco (`lessons_availability_rule` → `is_slot_available`) e na tela (sugestões de horários). Aulas existentes não são revalidadas; canceladas/realizadas/falta nunca.
+3. **Licença:** repositório público só para leitura/portfólio, sem licença de reuso (`LICENSE`, Pedro Del Col, 2026).
+4. **Backup:** o `.gpg` vai para um repositório privado separado (ver `docs/BACKUP.md` na `main` local), mantendo os 12 mais recentes.
+
+## 16. Perguntas em aberto
+
+1. Remarcar uma aula gerada por horário fixo e gerar o mesmo período de novo recria a aula no horário original (limitação antiga). Querem que a remarcação "desligue" a ocorrência original?
+2. Criar aula no passado (registro retroativo) hoje não é possível pela tela; precisa?
+3. As decisões do calendário da seção 13 (60 min, 09–17 seg–sex, Carnaval/Corpus Christi facultativos) estão boas?
