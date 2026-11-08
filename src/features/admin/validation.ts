@@ -131,6 +131,7 @@ export type PolicyFormValues = {
   late_cancel_band_enabled: boolean
   late_cancel_band_min_hours: string
   max_makeups_per_month: string
+  default_due_day: string
   cancellation_policy_text: string
 }
 
@@ -141,6 +142,7 @@ export type PolicyPayload = {
   late_cancel_band_enabled: boolean
   late_cancel_band_min_hours: number
   max_makeups_per_month: number
+  default_due_day: number
   cancellation_policy_text: string | null
 }
 
@@ -166,6 +168,10 @@ export function validatePolicyForm(v: PolicyFormValues): {
   if (makeups === null || makeups > 31)
     errors.max_makeups_per_month = 'Informe um número de 0 a 31.'
 
+  const dueDay = parseIntStrict(v.default_due_day)
+  if (dueDay === null || dueDay < 1 || dueDay > 31)
+    errors.default_due_day = 'Informe um dia de 1 a 31.'
+
   const text = v.cancellation_policy_text.trim()
   if (text.length > 4000)
     errors.cancellation_policy_text = 'O texto pode ter no máximo 4000 caracteres.'
@@ -174,7 +180,8 @@ export function validatePolicyForm(v: PolicyFormValues): {
     Object.keys(errors).length > 0 ||
     min === null ||
     band === null ||
-    makeups === null
+    makeups === null ||
+    dueDay === null
   ) {
     return { values: null, errors }
   }
@@ -184,6 +191,7 @@ export function validatePolicyForm(v: PolicyFormValues): {
       late_cancel_band_enabled: v.late_cancel_band_enabled,
       late_cancel_band_min_hours: band,
       max_makeups_per_month: makeups,
+      default_due_day: dueDay,
       cancellation_policy_text: text === '' ? null : text,
     },
     errors,

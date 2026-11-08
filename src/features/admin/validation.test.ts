@@ -103,6 +103,7 @@ const policy: PolicyFormValues = {
   late_cancel_band_enabled: true,
   late_cancel_band_min_hours: '12',
   max_makeups_per_month: '2',
+  default_due_day: '10',
   cancellation_policy_text: '',
 }
 
@@ -112,6 +113,7 @@ describe('validatePolicyForm', () => {
     expect(r.errors).toEqual({})
     expect(r.values).toMatchObject({
       cancellation_min_hours: 24,
+      default_due_day: 10,
       cancellation_policy_text: null,
     })
   })
@@ -142,6 +144,21 @@ describe('validatePolicyForm', () => {
     expect(r.errors.cancellation_min_hours).toBeTruthy()
     expect(r.errors.max_makeups_per_month).toBeTruthy()
     expect(r.errors.cancellation_policy_text).toBeTruthy()
+  })
+})
+
+describe('validatePolicyForm default_due_day', () => {
+  it.each(['0', '32', '', 'x', '1,5'])('rejeita "%s"', (d) => {
+    expect(
+      validatePolicyForm({ ...policy, default_due_day: d }).errors.default_due_day,
+    ).toBeTruthy()
+  })
+  it.each([
+    ['1', 1],
+    ['31', 31],
+  ])('aceita %s', (d, n) => {
+    const r = validatePolicyForm({ ...policy, default_due_day: d })
+    expect(r.values?.default_due_day).toBe(n)
   })
 })
 

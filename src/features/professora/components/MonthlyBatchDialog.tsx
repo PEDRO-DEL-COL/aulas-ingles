@@ -18,29 +18,11 @@ import {
   previewMonthlyInvoices,
 } from '@/features/professora/financeApi'
 import { formatDateOnly } from '@/features/shared/datetime'
+import { getSettings } from '@/features/admin/settings'
+import { useQuery } from '@/lib/data/useQuery'
 import { formatBRL } from '@/lib/format'
 
 import { FormField } from './FormField'
-
-const DAY_KEY = 'aulas-ingles:batch-due-day'
-
-function loadDueDay(): string {
-  try {
-    const v = window.localStorage.getItem(DAY_KEY)
-    if (v && /^\d{1,2}$/.test(v)) return v
-  } catch {
-    /* sem storage: usa o padrão */
-  }
-  return '10'
-}
-
-function saveDueDay(day: number) {
-  try {
-    window.localStorage.setItem(DAY_KEY, String(day))
-  } catch {
-    /* ignora */
-  }
-}
 
 const GROUPS: { action: BatchAction; title: string }[] = [
   { action: 'criar', title: 'Serão criadas' },
@@ -60,7 +42,11 @@ export function MonthlyBatchDialog({
   onDone: () => void
 }) {
   const [month, setMonth] = useState(() => defaultBatchMonth(now))
-  const [dueDay, setDueDay] = useState(loadDueDay)
+  const settings = useQuery('batch-settings', getSettings)
+  // null = a professora não mexeu: vale o padrão do admin (10 enquanto carrega/se falhar).
+  const [dueDayEdit, setDueDayEdit] = useState<string | null>(null)
+  const defaultDay = settings.data?.default_due_day ?? 10
+  const dueDay = dueDayEdit ?? String(defaultDay)
   const [errors, setErrors] = useState<BatchFormErrors>({})
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -89,7 +75,6 @@ export function MonthlyBatchDialog({
     setBusy(true)
     try {
       const rows = await previewMonthlyInvoices(valid.month, valid.dueDay)
-      saveDueDay(valid.dueDay)
       setPreview({ rows, month: valid.month, dueDay: valid.dueDay })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Não foi possível gerar a prévia.')
@@ -157,7 +142,11 @@ export function MonthlyBatchDialog({
                 />
               )}
             </FormField>
-            <FormField label="Dia de vencimento" error={errors.dueDay}>
+            <FormField
+              label="Dia de vencimento"
+              error={errors.dueDay}
+              help="Padrão definido pelo admin em Políticas. Mudar aqui vale só para este lote."
+            >
               {(p) => (
                 <Input
                   {...p}
@@ -166,7 +155,7 @@ export function MonthlyBatchDialog({
                   min={1}
                   max={31}
                   value={dueDay}
-                  onChange={(e) => setDueDay(e.target.value)}
+                  onChange={(e) => setDueDayEdit(e.target.value)}
                 />
               )}
             </FormField>

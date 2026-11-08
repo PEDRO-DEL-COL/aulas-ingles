@@ -24,6 +24,7 @@ function toForm(s: SettingsRow): PolicyFormValues {
     late_cancel_band_enabled: s.late_cancel_band_enabled,
     late_cancel_band_min_hours: String(s.late_cancel_band_min_hours),
     max_makeups_per_month: String(s.max_makeups_per_month),
+    default_due_day: String(s.default_due_day),
     cancellation_policy_text: s.cancellation_policy_text ?? '',
   }
 }
@@ -146,6 +147,21 @@ function PolicyForm({
             inputMode="numeric"
             value={values.max_makeups_per_month}
             onChange={(e) => set('max_makeups_per_month', e.target.value)}
+          />
+        )}
+      </FormField>
+
+      <FormField
+        label="Dia de vencimento padrão das mensalidades"
+        error={errors.default_due_day}
+        help="De 1 a 31. Em meses mais curtos, vence no último dia do mês. A professora ainda pode mudar o dia ao gerar um lote."
+      >
+        {(p) => (
+          <Input
+            {...p}
+            inputMode="numeric"
+            value={values.default_due_day}
+            onChange={(e) => set('default_due_day', e.target.value)}
           />
         )}
       </FormField>
