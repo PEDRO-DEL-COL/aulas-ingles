@@ -6,6 +6,19 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+> A v0.18.0 (GitHub Actions de keepalive e backup) está pronta só localmente, aguardando autorização do escopo `workflow`; esta linha (branch `calendario`) parte da v0.17.0.
+
+## [0.19.0] - 2026-11-08
+
+### Adicionado
+
+- Migration `20261118000001_availability_calendar.sql`: horário padrão com vigência (`availability_patterns`), exceções por data (`availability_exceptions`: fechado, substituir, extra, bloqueio), fuso da professora em `settings.teacher_timezone` e regra efetiva única (`availability_minutes`, `is_slot_available`) usada pela reposição; faixas existentes migradas para um padrão sem fim. Testes pgTAP `availability_calendar.test.sql`.
+- Motor puro do calendário (`src/features/calendar/engine.ts`) espelhando a regra do banco, com testes (inclui horário de verão histórico de São Paulo e viradas de dia); feriados nacionais do Brasil calculados localmente (Páscoa, Carnaval, Sexta-feira Santa, Corpus Christi); camada de dados do calendário.
+
+### Alterado
+
+- Tela Disponibilidade cria as faixas dentro do horário padrão (compatível com o modelo novo).
+
 ## [0.17.0] - 2026-11-07
 
 ### Adicionado

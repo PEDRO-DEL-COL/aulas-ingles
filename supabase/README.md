@@ -21,6 +21,7 @@ SQL versionado do projeto. Nunca altere tabelas só pelo painel; crie uma nova m
 15. `20261115000001_plan_benefits_due_day.sql`: tabelas `benefits` (catálogo de vantagens, rótulo único sem diferenciar maiúsculas) e `plan_benefits` (vantagens de cada plano, com ordem); leitura por usuário ativo, escrita só admin; `public_site_info` passa a incluir `benefits` dos planos ativos; `settings.default_due_day` (1–31, só admin).
 16. `20261116000001_teacher_availability.sql`: tabela `availability_slots` (dia da semana, início, fim, fuso, ativo; só staff); função `check_makeup_slot` e trigger `lessons_makeup_availability`: reposição só dentro de uma faixa ativa e fora de férias/feriados (sem nenhuma faixa ativa, só férias/feriados valem).
 17. `20261117000001_leads_guard.sql`: trigger `leads_rate_limit` no formulário público de interessados: o mesmo contato não reenvia em 10 minutos e no máximo 30 por hora (só chamadas anon/aluno; staff e SQL editor passam).
+18. `20261118000001_availability_calendar.sql`: calendário — `availability_patterns` (horário padrão com vigência e duração padrão), `availability_slots.pattern_id` (faixas antigas viram um padrão sem fim), `availability_exceptions` (por data: fechado, substituir, extra, bloqueio), `settings.teacher_timezone`; regra efetiva única `availability_minutes(date)` / `is_slot_available(timestamptz, int)`, usada pelo trigger de reposição; `check_makeup_slot` vira apelido.
 
 As migrations 1 a 8 já foram aplicadas no projeto remoto: não edite; mudanças vão em arquivos novos com timestamp maior (`supabase migration new nome`). Todas são idempotentes.
 
@@ -62,6 +63,8 @@ Trigger `lessons_makeup_rules` (reposição = `status 'reposicao'` com `reschedu
 - Fora isso, o limite não tem exceção por staff; para liberar mais, o admin sobe `max_makeups_per_month`.
 
 ## Disponibilidade e reposição
+
+**Desde a migration 18** a regra é `is_slot_available`: dia em férias/feriado ou com exceção `fechado` => bloqueado; senão a disponibilidade do dia é (faixas `substituir` do dia ou faixas dos padrões ativos vigentes; sem nenhum padrão ativo = dia inteiro) + `extra` − `bloqueio`, no fuso `settings.teacher_timezone`; a aula precisa caber inteira, sem atravessar a meia-noite. O texto abaixo descreve a versão anterior (migration 16).
 
 Reposição (`status = 'reposicao'`) só pode ser criada ou movida para um horário que caiba inteiro numa faixa ativa de `availability_slots` (dia da semana e horário locais do fuso da faixa) e fora de `blocked_dates`. Enquanto não houver nenhuma faixa ativa, só a regra de férias/feriados vale. O front consulta antes com `rpc('check_makeup_slot', { p_starts_at, p_duration })` (`ok` / `bloqueado` / `fora_disponibilidade`). Base da futura agenda virtual.
 
