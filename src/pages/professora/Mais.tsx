@@ -1,10 +1,17 @@
-import { CalendarOff, ChevronRight, FolderOpen, ShieldCheck } from 'lucide-react'
+import {
+  CalendarOff,
+  ChevronRight,
+  FolderOpen,
+  ShieldCheck,
+  User,
+  UserPlus,
+} from 'lucide-react'
 import type { ComponentType } from 'react'
 import { Link } from 'react-router'
 
 import { PageHeader } from '@/features/shared/components/StateViews'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import { useAuth } from '@/lib/auth/useAuth'
+import { useViewAs } from '@/lib/auth/useViewAs'
 
 type Entry = {
   to: string
@@ -26,6 +33,18 @@ const entries: Entry[] = [
     description: 'Dias sem aula: a geração de aulas recorrentes pula essas datas.',
     icon: CalendarOff,
   },
+  {
+    to: '/app/professora/interessados',
+    title: 'Interessados',
+    description: 'Quem pediu informações sobre as aulas (em breve).',
+    icon: UserPlus,
+  },
+  {
+    to: '/app/professora/perfil',
+    title: 'Meu perfil',
+    description: 'Seus dados e preferências (em breve).',
+    icon: User,
+  },
 ]
 
 const adminEntry: Entry = {
@@ -37,8 +56,8 @@ const adminEntry: Entry = {
 
 export default function Mais() {
   useDocumentTitle('Mais')
-  const { profile } = useAuth()
-  const list = profile?.role === 'admin' ? [...entries, adminEntry] : entries
+  const { role } = useViewAs()
+  const list = role === 'admin' ? [...entries, adminEntry] : entries
 
   return (
     <div>

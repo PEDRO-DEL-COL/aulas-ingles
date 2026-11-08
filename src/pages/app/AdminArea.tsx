@@ -9,6 +9,8 @@ const Usuarios = lazy(() => import('@/pages/admin/Usuarios'))
 const Planos = lazy(() => import('@/pages/admin/Planos'))
 const Politicas = lazy(() => import('@/pages/admin/Politicas'))
 const Configuracoes = lazy(() => import('@/pages/admin/Configuracoes'))
+const Mais = lazy(() => import('@/pages/admin/Mais'))
+const Backup = lazy(() => import('@/pages/admin/Backup'))
 
 /** Área do admin. As telas da professora ficam em /app/professora (o admin também acessa). */
 export default function AdminArea() {
@@ -21,6 +23,8 @@ export default function AdminArea() {
           <Route path="planos" element={<Planos />} />
           <Route path="politicas" element={<Politicas />} />
           <Route path="configuracoes" element={<Configuracoes />} />
+          <Route path="mais" element={<Mais />} />
+          <Route path="backup" element={<Backup />} />
           <Route
             path="*"
             element={
