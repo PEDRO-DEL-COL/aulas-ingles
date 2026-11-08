@@ -5,11 +5,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { Input, Label, Textarea } from '@/components/ui/field'
+import { rescheduleLesson } from '@/features/calendar/api'
+import { SlotPicker } from '@/features/calendar/components/SlotPicker'
+import { parseDuration, validateSlotChoice } from '@/features/calendar/lessonForm'
+import { useDayAvailability } from '@/features/calendar/useDayAvailability'
 import { formatDateTimeLong } from '@/features/shared/datetime'
-import { useQuery } from '@/lib/data/useQuery'
+import { friendlyError } from '@/features/shared/errors'
 
-import { formatRange, slotsForDate } from '../availability'
-import { checkMakeupSlot, listSlots } from '../availabilityApi'
 import { cancelLesson, scheduleMakeup, setLessonStatus } from '../api'
 import {
   canCancel,
@@ -18,11 +20,12 @@ import {
   needsMakeupDecision,
   type LessonWithStudent,
 } from '../lessons'
-import { addDaysKey, localToUtc } from '../tz'
+import { addDaysKey } from '../tz'
 import { dayKey } from '@/features/shared/datetime'
 import { TeacherStatusBadge } from './TeacherStatusBadge'
 
-type Mode = 'menu' | 'cancel_teacher' | 'cancel_student' | 'makeup' | 'done'
+type Mode =
+  'menu' | 'cancel_teacher' | 'cancel_student' | 'makeup' | 'reschedule' | 'done'
 
 function eligibilityText(l: { makeup_eligible: boolean | null }): string {
   if (l.makeup_eligible === true) return 'O aluno tem direito a reposição.'
@@ -53,17 +56,12 @@ export function LessonActionsDialog({
   const [message, setMessage] = useState<string | null>(null)
   const [reason, setReason] = useState('')
   const [date, setDate] = useState(() => addDaysKey(dayKey(openedAt, timezone), 1))
-  const [time, setTime] = useState('14:00')
+  const [time, setTime] = useState('')
+  const [durationText, setDurationText] = useState<string | null>(null)
 
-  const slotsQuery = useQuery('lesson-dialog-disponibilidade', listSlots)
-  const dayHint = (() => {
-    if (!slotsQuery.data) return null
-    if (!slotsQuery.data.some((x) => x.active)) return null
-    const day = slotsForDate(date, slotsQuery.data)
-    return day.length > 0
-      ? `Disponível nesse dia: ${day.map(formatRange).join(', ')}`
-      : 'Sem disponibilidade cadastrada nesse dia'
-  })()
+  // Só carrega a disponibilidade quando um formulário de data/hora está aberto.
+  const picking = mode === 'makeup' || mode === 'reschedule'
+  const avail = useDayAvailability(picking ? date : '')
 
   const name = lesson.student?.full_name ?? 'Aluno'
 
@@ -87,26 +85,56 @@ export function LessonActionsDialog({
   }
 
   function submitMakeup() {
-    const utc = localToUtc(date, time, timezone)
-    if (!utc) {
-      setError('Data ou hora inválida para o fuso configurado.')
-      return
-    }
-    if (utc.getTime() <= Date.now()) {
-      setError('A reposição precisa ser em uma data e hora futuras.')
+    const choice = validateSlotChoice({
+      dateKey: date,
+      time,
+      durationMin: lesson.duration_minutes,
+      data: avail.data,
+      timezone,
+    })
+    if (!choice.ok) {
+      setError(choice.error)
       return
     }
     void run(async () => {
-      const check = await checkMakeupSlot(utc.toISOString(), lesson.duration_minutes)
-      if (check === 'bloqueado')
-        throw new Error('Essa data cai em férias ou feriado. Escolha outro dia.')
-      if (check === 'fora_disponibilidade')
-        throw new Error(
-          'Esse horário está fora da sua disponibilidade. Escolha uma data e hora dentro das faixas cadastradas.',
-        )
-      await scheduleMakeup(lesson.id, utc.toISOString())
+      await scheduleMakeup(lesson.id, choice.startsAt)
       return 'Reposição agendada.'
     })
+  }
+
+  const rescheduleMinutes = parseDuration(durationText ?? String(lesson.duration_minutes))
+
+  function submitReschedule() {
+    const choice = validateSlotChoice({
+      dateKey: date,
+      time,
+      durationMin: rescheduleMinutes,
+      data: avail.data,
+      timezone,
+    })
+    if (!choice.ok || rescheduleMinutes === null) {
+      setError(choice.ok ? 'Duração inválida.' : choice.error)
+      return
+    }
+    void run(async () => {
+      try {
+        await rescheduleLesson(
+          lesson.id,
+          choice.startsAt,
+          rescheduleMinutes === lesson.duration_minutes ? undefined : rescheduleMinutes,
+        )
+      } catch (e) {
+        throw new Error(friendlyError(e, 'Não foi possível remarcar a aula.'))
+      }
+      return 'Aula remarcada.'
+    })
+  }
+
+  function openForm(next: 'makeup' | 'reschedule') {
+    setError(null)
+    setTime('')
+    setDurationText(null)
+    setMode(next)
   }
 
   const close = () => (busy ? undefined : onClose())
@@ -159,6 +187,11 @@ export function LessonActionsDialog({
               </Button>
             </>
           ) : null}
+          {lesson.status === 'agendada' || lesson.status === 'reposicao' ? (
+            <Button variant="outline" onClick={() => openForm('reschedule')}>
+              Remarcar
+            </Button>
+          ) : null}
           {canCancel(lesson, openedAt) ? (
             <>
               <Button variant="outline" onClick={() => setMode('cancel_teacher')}>
@@ -170,7 +203,7 @@ export function LessonActionsDialog({
             </>
           ) : null}
           {canScheduleMakeup(lesson, hasMakeup) ? (
-            <Button onClick={() => setMode('makeup')}>Agendar reposição</Button>
+            <Button onClick={() => openForm('makeup')}>Agendar reposição</Button>
           ) : null}
           {hasMakeup ? (
             <p className="text-sm text-muted-foreground">
@@ -236,36 +269,22 @@ export function LessonActionsDialog({
 
       {mode === 'makeup' ? (
         <>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="makeup-date">Data</Label>
-              <Input
-                id="makeup-date"
-                type="date"
-                value={date}
-                disabled={busy}
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="makeup-time">Hora</Label>
-              <Input
-                id="makeup-time"
-                type="time"
-                value={time}
-                disabled={busy}
-                onChange={(e) => setTime(e.target.value)}
-              />
-            </div>
-          </div>
-          {dayHint ? (
-            <p className="text-sm text-muted-foreground" aria-live="polite">
-              {dayHint}
-            </p>
-          ) : null}
+          <SlotPicker
+            idPrefix="makeup"
+            dateKey={date}
+            onDateChange={setDate}
+            time={time}
+            onTimeChange={setTime}
+            durationMin={lesson.duration_minutes}
+            data={avail.data}
+            loading={avail.loading}
+            error={avail.error}
+            onRetry={avail.retry}
+            disabled={busy}
+          />
           <p className="text-xs text-muted-foreground">
-            Horário no fuso {timezone}. O limite de reposições do mês é conferido pelo
-            banco.
+            Horário no fuso {timezone}. O limite de reposições do mês e a disponibilidade
+            são conferidos pelo banco.
           </p>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="outline" disabled={busy} onClick={() => setMode('menu')}>
@@ -273,6 +292,53 @@ export function LessonActionsDialog({
             </Button>
             <Button disabled={busy} onClick={submitMakeup}>
               {busy ? 'Agendando…' : 'Agendar reposição'}
+            </Button>
+          </div>
+        </>
+      ) : null}
+
+      {mode === 'reschedule' ? (
+        <>
+          <div className="space-y-1.5">
+            <Label htmlFor="resched-duration">Duração (min)</Label>
+            <Input
+              id="resched-duration"
+              type="number"
+              inputMode="numeric"
+              min={5}
+              max={480}
+              value={durationText ?? String(lesson.duration_minutes)}
+              disabled={busy}
+              aria-invalid={rescheduleMinutes === null}
+              onChange={(e) => setDurationText(e.target.value)}
+            />
+          </div>
+          <SlotPicker
+            idPrefix="resched"
+            dateKey={date}
+            onDateChange={setDate}
+            time={time}
+            onTimeChange={setTime}
+            durationMin={rescheduleMinutes}
+            data={avail.data}
+            loading={avail.loading}
+            error={avail.error}
+            onRetry={avail.retry}
+            disabled={busy}
+          />
+          <Alert variant="info" role="note">
+            <AlertDescription>
+              Horário no fuso {timezone}. Se esta aula foi gerada por um horário fixo do
+              aluno e o mesmo período for gerado de novo, ela pode reaparecer no horário
+              original (limitação conhecida).
+            </AlertDescription>
+          </Alert>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" disabled={busy} onClick={() => setMode('menu')}>
+              Voltar
+            </Button>
+            <Button disabled={busy} onClick={submitReschedule}>
+              {busy ? 'Remarcando…' : 'Remarcar aula'}
             </Button>
           </div>
         </>
