@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest'
 
 import { CURRENT_TERMS_VERSION } from '@/config/legal'
 
-import { homePathForRole, resolveAccess, safeReturnPath, type UserRole } from './access'
+import {
+  homePathForRole,
+  resolveAccess,
+  resolveAccessAs,
+  safeReturnPath,
+  withEffectiveRole,
+  type UserRole,
+} from './access'
 
 const base = {
   active: true,
@@ -75,5 +82,35 @@ describe('safeReturnPath', () => {
   })
   it('usa o fallback informado', () => {
     expect(safeReturnPath('//x', '/login')).toBe('/login')
+  })
+})
+
+describe('resolveAccessAs / withEffectiveRole', () => {
+  const admin = { ...base, role: 'admin' as UserRole }
+  it('admin vendo como aluno: acessa aluno, não admin nem professora', () => {
+    expect(resolveAccessAs(admin, 'aluno', ['aluno'])).toBe('allowed')
+    expect(resolveAccessAs(admin, 'aluno', ['admin'])).toBe('forbidden')
+    expect(resolveAccessAs(admin, 'aluno', ['professora', 'admin'])).toBe('forbidden')
+  })
+  it('admin vendo como professora: sai de admin', () => {
+    expect(resolveAccessAs(admin, 'professora', ['professora', 'admin'])).toBe('allowed')
+    expect(resolveAccessAs(admin, 'professora', ['admin'])).toBe('forbidden')
+  })
+  it('sem papel efetivo usa o real', () => {
+    expect(resolveAccessAs(admin, undefined, ['admin'])).toBe('allowed')
+  })
+  it('não liberado e termos continuam pelo perfil real', () => {
+    expect(resolveAccessAs({ ...admin, active: false }, 'aluno', ['aluno'])).toBe(
+      'not_released',
+    )
+    expect(
+      resolveAccessAs({ ...admin, terms_accepted_at: null }, 'aluno', ['aluno']),
+    ).toBe('needs_terms')
+    expect(resolveAccessAs(null, 'aluno')).toBe('not_released')
+  })
+  it('withEffectiveRole troca só o papel', () => {
+    expect(withEffectiveRole(admin, 'aluno')).toEqual({ ...admin, role: 'aluno' })
+    expect(withEffectiveRole(admin, undefined)).toBe(admin)
+    expect(withEffectiveRole(null, 'aluno')).toBeNull()
   })
 })

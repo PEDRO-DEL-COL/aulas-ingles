@@ -53,6 +53,32 @@ export function resolveAccess(
 }
 
 /**
+ * Perfil com o papel trocado pelo papel efetivo ("Ver como"). Liberação e termos
+ * continuam vindo do perfil real; só o papel (usado para rota/menus) muda.
+ */
+export function withEffectiveRole<T extends { role: UserRole }>(
+  profile: T | null | undefined,
+  role: UserRole | undefined,
+): T | null | undefined {
+  if (!profile || !role || role === profile.role) return profile
+  return { ...profile, role }
+}
+
+/** resolveAccess usando o papel efetivo (do "Ver como") no lugar do real. */
+export function resolveAccessAs(
+  profile: AccessProfile | null | undefined,
+  effective: UserRole | undefined,
+  requiredRoles?: readonly UserRole[],
+  currentVersion: string = CURRENT_TERMS_VERSION,
+): AccessDecision {
+  if (!profile || !isReleased(profile)) return 'not_released'
+  if (needsTerms(profile, currentVersion)) return 'needs_terms'
+  const role = effective ?? profile.role
+  if (requiredRoles && !requiredRoles.includes(role)) return 'forbidden'
+  return 'allowed'
+}
+
+/**
  * Aceita apenas caminhos internos ("/x"), nunca "//host", "/\host" ou URLs absolutas.
  * Evita open redirect no retorno pós-login.
  */
