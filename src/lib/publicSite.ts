@@ -16,6 +16,7 @@ export type PublicPlan = {
   priceCents: number
   currency: string
   description: string | null
+  benefits: string[]
 }
 
 export type PublicSiteInfo = {
@@ -46,6 +47,18 @@ function posInt(v: unknown): number | null {
   return typeof v === 'number' && Number.isInteger(v) && v > 0 ? v : null
 }
 
+function parseBenefits(v: unknown): string[] {
+  if (!Array.isArray(v)) return []
+  const out: string[] = []
+  for (const item of v) {
+    if (typeof item !== 'string') continue
+    const t = item.trim()
+    if (t.length >= 1 && t.length <= 120) out.push(t)
+    if (out.length === 12) break
+  }
+  return out
+}
+
 function parsePlan(raw: unknown): PublicPlan | null {
   if (!isRecord(raw)) return null
   const { id, name, billing_model: billing } = raw
@@ -70,6 +83,7 @@ function parsePlan(raw: unknown): PublicPlan | null {
     priceCents: price,
     currency: typeof raw.currency === 'string' ? raw.currency : 'BRL',
     description: typeof raw.description === 'string' ? raw.description : null,
+    benefits: parseBenefits(raw.benefits),
   }
 }
 
@@ -114,7 +128,7 @@ export function toLandingPlans(plans: PublicPlan[]): Plan[] {
     price: p.priceCents / 100,
     highlight: i === highlightIndex,
     description: p.description ?? '',
-    perks: [],
+    perks: p.benefits,
   }))
 }
 

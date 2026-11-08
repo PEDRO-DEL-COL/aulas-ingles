@@ -73,6 +73,29 @@ describe('parsePublicSiteInfo', () => {
   })
 })
 
+describe('benefits', () => {
+  it('ausente vira lista vazia e mapeia para perks', () => {
+    const r = parsePublicSiteInfo({ plans: [plan()] })!
+    expect(r.plans[0]?.benefits).toEqual([])
+    expect(toLandingPlans(r.plans)[0]?.perks).toEqual([])
+  })
+  it('filtra, apara e limita a 12', () => {
+    const many = Array.from({ length: 15 }, (_, i) => `v${i}`)
+    const r = parsePublicSiteInfo({
+      plans: [plan({ benefits: [' A ', '', '   ', 5, 'x'.repeat(121), ...many] })],
+    })!
+    const b = r.plans[0]!.benefits
+    expect(b).toHaveLength(12)
+    expect(b.slice(0, 3)).toEqual(['A', 'v0', 'v1'])
+    expect(toLandingPlans(r.plans)[0]?.perks).toEqual(b)
+  })
+  it('não-array vira vazio', () => {
+    expect(
+      parsePublicSiteInfo({ plans: [plan({ benefits: 'x' })] })!.plans[0]?.benefits,
+    ).toEqual([])
+  })
+})
+
 describe('toLandingPlans', () => {
   it('converte modelos, preço e descrição', () => {
     const parsed = parsePublicSiteInfo({
