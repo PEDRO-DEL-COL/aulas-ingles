@@ -6,6 +6,21 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.20.0] - 2026-11-08
+
+### Adicionado
+
+- Calendário da professora/admin (`/app/professora/calendario`), componente próprio sem bibliotecas novas e carregado só nessa rota: visões Mês (estado de cada dia por cor + ícone + texto e contagem de aulas), Semana (grade de horas com disponibilidade, bloqueios e aulas lado a lado; um dia por vez no celular) e Dia (lista); navegação Hoje/anterior/próximo/ir para data; visão e data na URL; legenda acessível.
+- Exceções por data pelo painel do dia ou arrastando na grade (toque longo no celular): fechar/abrir o dia, mudar o horário só daquele dia, horário extra, bloquear intervalo; atualização otimista e "Desfazer".
+- Assistente "Definir horário padrão": dias, início/fim, intervalos, horários diferentes por dia, duração padrão da aula, vigência (o ano todo, até o fim do ano, sem fim) e prévia (dias que mudam, aulas que ficariam fora).
+- Feriados nacionais do Brasil sugeridos por regra (com Carnaval e Corpus Christi facultativos), feriados municipais/pessoais e férias por intervalo, com contagem das aulas que serão canceladas antes de confirmar.
+- Conflitos: mudanças que removem horário mostram as aulas afetadas e deixam escolher manter, cancelar (com reposição) ou voltar.
+- Clicar numa aula abre as ações já existentes (realizada, falta, cancelar, reposição); "Gerar aulas" recorrentes na barra.
+
+### Alterado
+
+- Navegação: "Agenda" virou "Calendário"; Disponibilidade e Férias e feriados saíram do menu Mais. As rotas antigas redirecionam para o calendário e as telas antigas foram removidas.
+
 > A v0.18.0 (GitHub Actions de keepalive e backup) está pronta só localmente, aguardando autorização do escopo `workflow`; esta linha (branch `calendario`) parte da v0.17.0.
 
 ## [0.19.0] - 2026-11-08
