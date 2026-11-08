@@ -61,6 +61,25 @@ const KNOWN: readonly [needle: string, message: string][] = [
   ],
   ['dia de vencimento invalido', 'Escolha um dia de vencimento entre 1 e 31.'],
   ['informe o mes de referencia', 'Escolha o mês de referência.'],
+  // Vantagens e vencimento (migration 15)
+  ['benefits_label_key', 'Essa vantagem já está cadastrada.'],
+  ['settings_default_due_day', 'O dia de vencimento deve ser entre 1 e 31.'],
+  // Disponibilidade (migration 16)
+  [
+    'reposicao em ferias ou feriado',
+    'Essa data está em férias ou feriado. Escolha outra data para a reposição.',
+  ],
+  [
+    'reposicao fora da disponibilidade',
+    'Esse horário está fora da disponibilidade da professora. Escolha um horário disponível.',
+  ],
+  ['availability_slots_range', 'O horário final precisa ser depois do inicial.'],
+  // Interessados (migration 17)
+  [
+    'interessado ja enviado',
+    'Recebemos o seu contato há pouco. A professora vai responder em breve.',
+  ],
+  ['muitos envios', 'Muitos envios no momento. Tente de novo em alguns minutos.'],
 ]
 
 export const GENERIC_ERROR = 'Algo deu errado. Verifique a conexão e tente de novo.'
