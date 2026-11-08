@@ -1,5 +1,5 @@
 -- pgTAP: disponibilidade da professora e reposicao so dentro dela e fora de ferias
--- (migration 20261116000001).
+-- (migrations 20261116000001 e 20261118000001).
 -- Roda numa transacao com ROLLBACK (supabase test db).
 
 begin;
@@ -41,9 +41,11 @@ select is((select public.check_makeup_slot('2027-04-05 13:00+00', 60)), 'ok',
           'sem disponibilidade cadastrada, qualquer horario fora de ferias vale');
 select lives_ok($$select public.schedule_makeup('11111111-0000-0000-0000-000000000001', '2027-04-05 13:00+00')$$,
                 'reposicao aceita sem disponibilidade configurada');
-select throws_ok($$insert into public.availability_slots (weekday, start_time, end_time) values (1, '12:00', '08:00')$$,
+-- Desde a migration 18 as faixas pertencem a um horario padrao (com vigencia).
+insert into public.availability_patterns (id, starts_on) values ('cccccccc-0000-0000-0000-000000000001', '2027-01-01');
+select throws_ok($$insert into public.availability_slots (pattern_id, weekday, start_time, end_time) values ('cccccccc-0000-0000-0000-000000000001', 1, '12:00', '08:00')$$,
                  '23514', null, 'faixa com fim antes do inicio e rejeitada');
-select lives_ok($$insert into public.availability_slots (weekday, start_time, end_time) values (1, '08:00', '12:00')$$,
+select lives_ok($$insert into public.availability_slots (pattern_id, weekday, start_time, end_time) values ('cccccccc-0000-0000-0000-000000000001', 1, '08:00', '12:00')$$,
                 'professora cadastra disponibilidade (segunda 08-12)');
 select is((select public.check_makeup_slot('2027-04-12 13:00+00', 60)), 'ok', 'segunda 10:00 por 60 min cabe');
 select is((select public.check_makeup_slot('2027-04-12 14:30+00', 60)), 'fora_disponibilidade',
@@ -69,7 +71,7 @@ reset role;
 
 select pg_temp.as_user('a1000000-0000-0000-0000-00000000000a');
 select is((select count(*)::int from public.availability_slots), 0, 'aluno nao ve a disponibilidade');
-select throws_ok($$insert into public.availability_slots (weekday, start_time, end_time) values (2, '08:00', '09:00')$$,
+select throws_ok($$insert into public.availability_slots (pattern_id, weekday, start_time, end_time) values ('cccccccc-0000-0000-0000-000000000001', 2, '08:00', '09:00')$$,
                  '42501', null, 'aluno nao cadastra disponibilidade');
 reset role;
 
