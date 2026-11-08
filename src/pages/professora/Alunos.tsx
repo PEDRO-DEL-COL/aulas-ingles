@@ -1,4 +1,4 @@
-import { Plus, UserCheck } from 'lucide-react'
+import { FileSpreadsheet, Plus, UserCheck } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 
@@ -33,12 +33,20 @@ export default function Alunos() {
     <div className="space-y-4">
       <header className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Alunos</h1>
-        <Button asChild>
-          <Link to="/app/professora/alunos/novo">
-            <Plus aria-hidden="true" />
-            Novo aluno
-          </Link>
-        </Button>
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button asChild variant="outline">
+            <Link to="/app/professora/planilhas">
+              <FileSpreadsheet aria-hidden="true" />
+              Importar planilha
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link to="/app/professora/alunos/novo">
+              <Plus aria-hidden="true" />
+              Novo aluno
+            </Link>
+          </Button>
+        </div>
       </header>
 
       <div className="grid gap-3 sm:grid-cols-[1fr_12rem]">
