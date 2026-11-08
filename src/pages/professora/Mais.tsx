@@ -1,6 +1,4 @@
 import {
-  CalendarClock,
-  CalendarOff,
   ChevronRight,
   FileSpreadsheet,
   FolderOpen,
@@ -28,18 +26,6 @@ const entries: Entry[] = [
     title: 'Materiais',
     description: 'Links do Drive para todos os alunos, um aluno ou uma aula.',
     icon: FolderOpen,
-  },
-  {
-    to: '/app/professora/disponibilidade',
-    title: 'Disponibilidade',
-    description: 'Dias e horários em que você aceita reposições.',
-    icon: CalendarClock,
-  },
-  {
-    to: '/app/professora/feriados',
-    title: 'Férias e feriados',
-    description: 'Dias sem aula: a geração de aulas recorrentes pula essas datas.',
-    icon: CalendarOff,
   },
   {
     to: '/app/professora/planilhas',

@@ -430,11 +430,11 @@ export default function AulaRegistro() {
   return (
     <div className="space-y-4">
       <Link
-        to="/app/professora/agenda"
+        to="/app/professora/calendario?visao=semana"
         className="inline-flex items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline"
       >
         <ArrowLeft aria-hidden="true" className="size-4" />
-        Agenda
+        Calendário
       </Link>
 
       {record.error ? (
