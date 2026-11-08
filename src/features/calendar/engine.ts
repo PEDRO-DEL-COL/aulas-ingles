@@ -209,13 +209,13 @@ export function localParts(
   }
 }
 
-export function isSlotAvailable(
-  startsAtIso: string,
+/** Mesma regra de isSlotAvailable, já com data e minuto locais. */
+function checkLocal(
+  dateKey: string,
+  minute: number,
   durationMin: number,
   data: AvailabilityData,
-  tz: string,
 ): SlotCheck {
-  const { dateKey, minute } = localParts(startsAtIso, tz)
   if (
     blockedOn(dateKey, data) ||
     data.exceptions.some((e) => e.on_date === dateKey && e.kind === 'fechado')
@@ -227,6 +227,80 @@ export function isSlotAvailable(
   return rangesContain(effectiveDay(dateKey, data).ranges, [minute, minute + durationMin])
     ? 'ok'
     : 'fora_disponibilidade'
+}
+
+export function isSlotAvailable(
+  startsAtIso: string,
+  durationMin: number,
+  data: AvailabilityData,
+  tz: string,
+): SlotCheck {
+  const { dateKey, minute } = localParts(startsAtIso, tz)
+  return checkLocal(dateKey, minute, durationMin, data)
+}
+
+// ------------------------------------------------------------------ sugestões
+
+/** Há algum horário padrão ativo? Sem ele o banco aceita qualquer horário (exceto bloqueios). */
+export function hasActivePattern(data: Pick<AvailabilityData, 'patterns'>): boolean {
+  return data.patterns.some((p) => p.active)
+}
+
+/**
+ * Horários "HH:MM" (de `stepMin` em `stepMin` minutos) em que uma aula de `durationMin`
+ * cabe inteira na disponibilidade efetiva do dia. Vazio se o dia está fechado/bloqueado.
+ */
+export function suggestStarts(
+  dateKey: string,
+  durationMin: number,
+  data: AvailabilityData,
+  stepMin = 30,
+): string[] {
+  if (!(durationMin > 0) || !(stepMin > 0)) return []
+  const ranges = effectiveDay(dateKey, data).ranges
+  const out: string[] = []
+  for (let m = 0; m + durationMin <= DAY_MINUTES; m += stepMin) {
+    if (rangesContain(ranges, [m, m + durationMin])) out.push(minuteToTime(m))
+  }
+  return out
+}
+
+export type ScheduleFitInput = {
+  weekday: number
+  /** "HH:MM" ou "HH:MM:SS", no fuso da professora. */
+  startTime: string
+  durationMin: number
+  startsOn: string
+  endsOn: string | null
+}
+
+export type ScheduleFitResult = {
+  total: number
+  outside: { dateKey: string; reason: Exclude<SlotCheck, 'ok'> }[]
+}
+
+/**
+ * Das próximas `weeks` semanas a partir de `fromKey`, quantas ocorrências do horário fixo
+ * existem e quais não cabem na disponibilidade (essas não seriam geradas).
+ */
+export function scheduleFit(
+  input: ScheduleFitInput,
+  data: AvailabilityData,
+  fromKey: string,
+  weeks = 8,
+): ScheduleFitResult {
+  const result: ScheduleFitResult = { total: 0, outside: [] }
+  const minute = timeToMinute(input.startTime)
+  if (!parseDayKey(fromKey) || !Number.isFinite(minute)) return result
+  let key = fromKey
+  for (let i = 0; i < weeks * 7; i++, key = addDaysKey(key, 1)) {
+    if (weekdayOfKey(key) !== input.weekday) continue
+    if (key < input.startsOn || (input.endsOn !== null && key > input.endsOn)) continue
+    result.total += 1
+    const res = checkLocal(key, minute, input.durationMin, data)
+    if (res !== 'ok') result.outside.push({ dateKey: key, reason: res })
+  }
+  return result
 }
 
 // ------------------------------------------------------------------ aulas afetadas

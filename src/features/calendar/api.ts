@@ -1,5 +1,10 @@
 /** Camada de dados do calendário de disponibilidade. RLS: só staff. */
-import { cancelLesson, listLessonsBetween } from '@/features/professora/api'
+import type { StudentRecord } from '@/features/aluno/lessons'
+import { cancelLesson, listLessonsBetween, listStudents } from '@/features/professora/api'
+import {
+  parseGenerationReport,
+  type GenerationReport,
+} from '@/features/professora/generation'
 import type { LessonWithStudent } from '@/features/professora/lessons'
 import { DEFAULT_TIMEZONE, safeTimezone } from '@/features/shared/datetime'
 import { friendlyError } from '@/features/shared/errors'
@@ -246,4 +251,68 @@ export async function cancelLessonsByTeacher(
     }
   }
   return out
+}
+
+/** Existe ao menos um horário padrão ativo? (consulta leve: limit 1) */
+export async function hasActiveAvailabilityPattern(): Promise<boolean> {
+  const { data, error } = await getSupabase()
+    .from('availability_patterns')
+    .select('id')
+    .eq('active', true)
+    .limit(1)
+  if (error) fail(error, 'Não foi possível conferir o horário padrão.')
+  return data.length > 0
+}
+
+/** Gera as aulas dos horários fixos e devolve o relatório (criadas e puladas). */
+export async function generateRecurringLessons(
+  from: string,
+  to: string,
+): Promise<GenerationReport> {
+  const { data, error } = await getSupabase().rpc('generate_recurring_lessons', {
+    p_from: from,
+    p_to: to,
+  })
+  if (error) fail(error, 'Não foi possível gerar as aulas. Tente de novo.')
+  return parseGenerationReport(data)
+}
+
+export async function listActiveStudents(): Promise<StudentRecord[]> {
+  return (await listStudents()).filter((s) => s.status === 'ativo')
+}
+
+/** Aula avulsa. O banco revalida a disponibilidade (erro vem traduzido). */
+export async function createLesson(input: {
+  studentId: string
+  startsAtIso: string
+  durationMinutes: number
+}): Promise<string> {
+  const { data, error } = await getSupabase()
+    .from('lessons')
+    .insert({
+      student_id: input.studentId,
+      starts_at: input.startsAtIso,
+      duration_minutes: input.durationMinutes,
+      status: 'agendada',
+    })
+    .select('id')
+    .single()
+  if (error) fail(error, 'Não foi possível criar a aula. Tente de novo.')
+  return data.id
+}
+
+/** Remarca (data/hora e, opcionalmente, duração). O banco revalida. */
+export async function rescheduleLesson(
+  id: string,
+  startsAtIso: string,
+  durationMinutes?: number,
+): Promise<void> {
+  const { error } = await getSupabase()
+    .from('lessons')
+    .update({
+      starts_at: startsAtIso,
+      ...(durationMinutes === undefined ? {} : { duration_minutes: durationMinutes }),
+    })
+    .eq('id', id)
+  if (error) fail(error, 'Não foi possível remarcar a aula. Tente de novo.')
 }
