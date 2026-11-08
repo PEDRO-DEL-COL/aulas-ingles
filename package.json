@@ -1,7 +1,8 @@
 {
   "name": "aulas-ingles",
   "private": true,
-  "version": "0.21.0",
+  "license": "UNLICENSED",
+  "version": "0.21.1",
   "type": "module",
   "scripts": {
     "dev": "vite",

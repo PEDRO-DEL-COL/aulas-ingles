@@ -6,6 +6,16 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.21.1] - 2026-11-08
+
+### Adicionado
+
+- `LICENSE`: todos os direitos reservados (Pedro Del Col, 2026); código público só para leitura/portfólio, sem licença de reuso. Aviso no README e `"license": "UNLICENSED"` no `package.json`.
+
+### Documentação
+
+- Varredura de segredos no histórico do git (nada encontrado), topologia das branches e decisões da rodada 8 em `docs/PENDENCIAS.md`.
+
 ## [0.21.0] - 2026-11-08
 
 ### Adicionado
