@@ -1,6 +1,6 @@
 /**
  * Tipos do banco, ESCRITOS À MÃO no formato de `supabase gen types typescript`,
- * espelhando supabase/migrations até 20261117000001_leads_guard.sql.
+ * espelhando supabase/migrations até 20261118000001_availability_calendar.sql.
  *
  * Por que à mão: gerar exige um Postgres com as migrations aplicadas — o projeto
  * remoto (`--linked`, só quem tem acesso ao painel deve rodar) ou um banco local
@@ -222,6 +222,8 @@ type PlanBenefitRow = {
 
 type AvailabilitySlotRow = {
   id: string
+  /** Horário padrão ao qual a faixa pertence (migration 18). */
+  pattern_id: string
   /** 0 = domingo ... 6 = sábado */
   weekday: number
   /** "HH:MM:SS", horário local do fuso `timezone` */
@@ -230,6 +232,33 @@ type AvailabilitySlotRow = {
   timezone: string
   active: boolean
   notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+type AvailabilityPatternRow = {
+  id: string
+  name: string
+  /** "AAAA-MM-DD" (data local) */
+  starts_on: string
+  /** null = sem fim */
+  ends_on: string | null
+  default_lesson_minutes: number
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type AvailabilityExceptionKind = 'fechado' | 'substituir' | 'extra' | 'bloqueio'
+
+type AvailabilityExceptionRow = {
+  id: string
+  on_date: string
+  kind: AvailabilityExceptionKind
+  /** "HH:MM:SS"; null só em 'fechado'. "24:00:00" = fim do dia. */
+  start_time: string | null
+  end_time: string | null
+  reason: string | null
   created_at: string
   updated_at: string
 }
@@ -247,6 +276,8 @@ type SettingsRow = {
   max_makeups_per_month: number
   /** Dia de vencimento padrão das mensalidades (1 a 31). Migration 15. */
   default_due_day: number
+  /** Fuso das regras de disponibilidade (migration 18). */
+  teacher_timezone: string
   whatsapp_number: string | null
   business_name: string | null
   terms_version: string | null
@@ -389,8 +420,21 @@ export type Database = {
       availability_slots: {
         Row: AvailabilitySlotRow
         Insert: Partial<AvailabilitySlotRow> &
-          Pick<AvailabilitySlotRow, 'weekday' | 'start_time' | 'end_time'>
+          Pick<AvailabilitySlotRow, 'pattern_id' | 'weekday' | 'start_time' | 'end_time'>
         Update: Partial<AvailabilitySlotRow>
+        Relationships: []
+      }
+      availability_patterns: {
+        Row: AvailabilityPatternRow
+        Insert: Partial<AvailabilityPatternRow>
+        Update: Partial<AvailabilityPatternRow>
+        Relationships: []
+      }
+      availability_exceptions: {
+        Row: AvailabilityExceptionRow
+        Insert: Partial<AvailabilityExceptionRow> &
+          Pick<AvailabilityExceptionRow, 'on_date' | 'kind'>
+        Update: Partial<AvailabilityExceptionRow>
         Relationships: []
       }
       settings: {
@@ -433,6 +477,15 @@ export type Database = {
       schedule_makeup: {
         Args: { p_original_lesson: string; p_starts_at: string; p_duration?: number }
         Returns: LessonRow
+      }
+      is_slot_available: {
+        Args: { p_starts_at: string; p_duration: number }
+        Returns: 'ok' | 'bloqueado' | 'fora_disponibilidade'
+      }
+      availability_minutes: {
+        Args: { p_date: string }
+        /** int4multirange em texto, ex.: "{[540,720),[780,1020)}" */
+        Returns: string
       }
       check_makeup_slot: {
         Args: { p_starts_at: string; p_duration: number }
