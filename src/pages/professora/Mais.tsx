@@ -2,6 +2,7 @@ import {
   CalendarClock,
   CalendarOff,
   ChevronRight,
+  FileSpreadsheet,
   FolderOpen,
   ShieldCheck,
   User,
@@ -39,6 +40,12 @@ const entries: Entry[] = [
     title: 'Férias e feriados',
     description: 'Dias sem aula: a geração de aulas recorrentes pula essas datas.',
     icon: CalendarOff,
+  },
+  {
+    to: '/app/professora/planilhas',
+    title: 'Planilhas',
+    description: 'Importar alunos de uma planilha e exportar alunos, aulas e pagamentos.',
+    icon: FileSpreadsheet,
   },
   {
     to: '/app/professora/interessados',
