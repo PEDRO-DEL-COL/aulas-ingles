@@ -15,9 +15,10 @@ const ORDER: Material['type'][] = ['drive', 'pdf', 'audio', 'video', 'link', 'ou
 
 export default function Materiais() {
   useDocumentTitle('Materiais')
-  const { student } = useAluno()
-  const { data, error, loading, refetch } = useQuery(`materiais:${student.id}`, () =>
-    listMaterials(),
+  const { student, readOnly } = useAluno()
+  const { data, error, loading, refetch } = useQuery(
+    `materiais:${student.id}:${readOnly}`,
+    () => listMaterials(readOnly ? student.id : undefined),
   )
 
   return (

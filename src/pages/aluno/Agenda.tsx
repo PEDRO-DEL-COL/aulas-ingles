@@ -14,6 +14,7 @@ import {
   ListSkeleton,
   PageHeader,
 } from '@/features/shared/components/StateViews'
+import { PREVIEW_UNAVAILABLE } from '@/features/aluno/preview'
 import { useNow } from '@/features/shared/useNow'
 import { LessonStatusBadge } from '@/features/aluno/components/StatusBadges'
 import {
@@ -32,7 +33,7 @@ import {
 
 export default function Agenda() {
   useDocumentTitle('Agenda')
-  const { student, timezone } = useAluno()
+  const { student, timezone, readOnly } = useAluno()
   const { data, error, loading, refetch } = useQuery(`lessons:${student.id}`, () =>
     listLessons(student.id),
   )
@@ -89,14 +90,21 @@ export default function Agenda() {
                           {note ? ` · ${note}` : ''}
                         </p>
                         {canStudentCancel(l, now) ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="self-start"
-                            onClick={() => setCanceling(l)}
-                          >
-                            Cancelar aula
-                          </Button>
+                          <div className="self-start">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={readOnly}
+                              onClick={() => setCanceling(l)}
+                            >
+                              Cancelar aula
+                            </Button>
+                            {readOnly ? (
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {PREVIEW_UNAVAILABLE}
+                              </p>
+                            ) : null}
+                          </div>
                         ) : null}
                         <Link
                           to={`/app/aluno/aulas/${l.id}`}
@@ -114,7 +122,7 @@ export default function Agenda() {
         </div>
       )}
 
-      {canceling ? (
+      {canceling && !readOnly ? (
         <CancelDialog
           lesson={canceling}
           onClose={() => setCanceling(null)}

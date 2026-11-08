@@ -7,6 +7,8 @@ export type AlunoValue = {
   settings: Settings
   /** Fuso do perfil (padrão America/Sao_Paulo). */
   timezone: string
+  /** true na pré-visualização do admin: nenhuma ação de escrita é permitida. */
+  readOnly: boolean
 }
 
 export const AlunoContext = createContext<AlunoValue | undefined>(undefined)

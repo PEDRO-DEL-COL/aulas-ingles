@@ -8,6 +8,7 @@ import type { Tables } from '@/types/database'
 import { friendlyError } from '@/features/shared/errors'
 import type { Invoice } from './invoices'
 import { findMakeup, type Lesson, type Settings, type StudentRecord } from './lessons'
+import { materialsOrFilter, type StudentOption } from './preview'
 
 export type Plan = Tables<'plans'>
 export type Material = Tables<'materials'>
@@ -38,6 +39,27 @@ export async function getMyStudent(profileId: string): Promise<StudentRecord | n
   return data
 }
 
+/** Pré-visualização (admin): ficha de um aluno pelo id. */
+export async function getStudentById(studentId: string): Promise<StudentRecord | null> {
+  const { data, error } = await getSupabase()
+    .from('students')
+    .select('*')
+    .eq('id', studentId)
+    .maybeSingle()
+  if (error) fail(error, 'Não foi possível carregar a ficha do aluno.')
+  return data
+}
+
+/** Pré-visualização (admin): lista de alunos para escolher. */
+export async function listStudentOptions(): Promise<StudentOption[]> {
+  const { data, error } = await getSupabase()
+    .from('students')
+    .select('id, full_name, email, status')
+    .order('full_name', { ascending: true })
+  if (error) fail(error, 'Não foi possível carregar a lista de alunos.')
+  return data
+}
+
 export async function getPlan(planId: string): Promise<Plan | null> {
   const { data, error } = await getSupabase()
     .from('plans')
@@ -59,12 +81,17 @@ export async function listLessons(studentId: string): Promise<Lesson[]> {
   return data
 }
 
-export async function getLesson(lessonId: string): Promise<LessonDetail | null> {
+/** `studentId` restringe a aula ao aluno (necessário na pré-visualização, onde a RLS libera tudo). */
+export async function getLesson(
+  lessonId: string,
+  studentId: string,
+): Promise<LessonDetail | null> {
   const supabase = getSupabase()
   const { data: lesson, error } = await supabase
     .from('lessons')
     .select('*')
     .eq('id', lessonId)
+    .eq('student_id', studentId)
     .maybeSingle()
   if (error) fail(error, 'Não foi possível carregar a aula.')
   if (!lesson) return null
@@ -108,11 +135,28 @@ export async function listLessonNotes(
   return map
 }
 
-export async function listMaterials(): Promise<Material[]> {
-  const { data, error } = await getSupabase()
-    .from('materials')
-    .select('*')
-    .order('created_at', { ascending: false })
+/**
+ * Materiais do aluno: dele, das aulas dele ou públicos para alunos. Aluno real:
+ * a RLS já filtra (consulta igual à de sempre). Pré-visualização (`studentId`):
+ * a RLS do admin libera tudo, então o filtro é explícito.
+ */
+export async function listMaterials(studentId?: string): Promise<Material[]> {
+  const supabase = getSupabase()
+  let query = supabase.from('materials').select('*')
+  if (studentId) {
+    const lessons = await supabase
+      .from('lessons')
+      .select('id')
+      .eq('student_id', studentId)
+    if (lessons.error) fail(lessons.error, 'Não foi possível carregar os materiais.')
+    query = query.or(
+      materialsOrFilter(
+        studentId,
+        lessons.data.map((l) => l.id),
+      ),
+    )
+  }
+  const { data, error } = await query.order('created_at', { ascending: false })
   if (error) fail(error, 'Não foi possível carregar os materiais.')
   return data
 }

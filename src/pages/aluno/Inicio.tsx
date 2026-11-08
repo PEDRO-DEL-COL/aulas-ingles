@@ -19,7 +19,7 @@ import { NextLessonCard } from '@/features/aluno/components/NextLessonCard'
 
 export default function Inicio() {
   useDocumentTitle('Início')
-  const { student, settings } = useAluno()
+  const { student, settings, readOnly } = useAluno()
   const now = useNow()
 
   const lessons = useQuery(`lessons:${student.id}`, () => listLessons(student.id))
@@ -33,7 +33,11 @@ export default function Inicio() {
 
   return (
     <div className="space-y-4">
-      <Greeting />
+      {readOnly ? (
+        <h1 className="text-2xl font-bold">Olá, {student.full_name.split(' ')[0]}</h1>
+      ) : (
+        <Greeting />
+      )}
 
       {lessons.error ? (
         <ErrorState error={lessons.error} onRetry={lessons.refetch} />

@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth/useAuth'
 import { useQuery } from '@/lib/data/useQuery'
 import { getPlan, getSettings, updateMyProfile } from '@/features/aluno/api'
 import { useAluno } from '@/features/aluno/AlunoContext'
+import { PREVIEW_UNAVAILABLE } from '@/features/aluno/preview'
 import { PageHeader } from '@/features/shared/components/StateViews'
 import { brand } from '@/config/brand'
 import { formatBRL } from '@/lib/format'
@@ -44,7 +45,7 @@ function ReadOnly({ label, value }: { label: string; value: string | null | unde
 export default function Perfil() {
   useDocumentTitle('Meu perfil')
   const { profile, refreshProfile, signOut } = useAuth()
-  const { student, timezone } = useAluno()
+  const { student, timezone, readOnly } = useAluno()
   const plan = useQuery(`plano:${student.plan_id ?? 'nenhum'}`, async () =>
     student.plan_id ? getPlan(student.plan_id) : null,
   )
@@ -54,11 +55,13 @@ export default function Perfil() {
   const whatsappLink = whatsappNumber
     ? buildWhatsAppLink(
         whatsappNumber,
-        `Olá! Sou aluno(a) e gostaria de falar com você. (${profile?.full_name ?? ''})`,
+        `Olá! Sou aluno(a) e gostaria de falar com você. (${(readOnly ? student.full_name : profile?.full_name) ?? ''})`,
       )
     : null
 
-  const [phone, setPhone] = useState(profile?.phone ?? '')
+  const [phone, setPhone] = useState(
+    readOnly ? (student.phone ?? '') : (profile?.phone ?? ''),
+  )
   const [tz, setTz] = useState(timezone)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -72,7 +75,7 @@ export default function Perfil() {
 
   async function save(e: FormEvent) {
     e.preventDefault()
-    if (!profile) return
+    if (!profile || readOnly) return
     setBusy(true)
     setError(null)
     try {
@@ -103,11 +106,19 @@ export default function Perfil() {
         <form onSubmit={(e) => void save(e)} className="space-y-3">
           <div className="space-y-1.5">
             <Label htmlFor="p-nome">Nome</Label>
-            <Input id="p-nome" value={profile.full_name} readOnly />
+            <Input
+              id="p-nome"
+              value={readOnly ? student.full_name : profile.full_name}
+              readOnly
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="p-email">E-mail</Label>
-            <Input id="p-email" value={profile.email} readOnly />
+            <Input
+              id="p-email"
+              value={readOnly ? student.email : profile.email}
+              readOnly
+            />
             <p className="text-xs text-muted-foreground">
               O e-mail e o nome só podem ser alterados pela professora.
             </p>
@@ -121,12 +132,18 @@ export default function Perfil() {
               autoComplete="tel"
               maxLength={30}
               value={phone}
+              disabled={readOnly}
               onChange={(e) => setPhone(e.target.value)}
             />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="p-tz">Fuso horário</Label>
-            <Select id="p-tz" value={tz} onChange={(e) => setTz(e.target.value)}>
+            <Select
+              id="p-tz"
+              value={tz}
+              disabled={readOnly}
+              onChange={(e) => setTz(e.target.value)}
+            >
               {tzOptions.map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
@@ -138,9 +155,12 @@ export default function Perfil() {
             </p>
           </div>
           {error ? <Alert variant="destructive">{error}</Alert> : null}
-          <Button type="submit" disabled={busy}>
+          <Button type="submit" disabled={busy || readOnly}>
             {busy ? 'Salvando…' : 'Salvar alterações'}
           </Button>
+          {readOnly ? (
+            <p className="text-xs text-muted-foreground">{PREVIEW_UNAVAILABLE}</p>
+          ) : null}
         </form>
       </Card>
 
@@ -182,9 +202,11 @@ export default function Perfil() {
       <Card>
         <CardTitle>Termos e privacidade</CardTitle>
         <p className="text-sm text-muted-foreground">
-          {profile.terms_accepted_at
-            ? `Aceito em ${formatDateTime(profile.terms_accepted_at, timezone)} (versão ${profile.terms_version ?? '—'}).`
-            : 'Termos ainda não aceitos.'}
+          {readOnly
+            ? 'O aceite dos termos é registrado na conta de cada aluno.'
+            : profile.terms_accepted_at
+              ? `Aceito em ${formatDateTime(profile.terms_accepted_at, timezone)} (versão ${profile.terms_version ?? '—'}).`
+              : 'Termos ainda não aceitos.'}
         </p>
         <Link
           to="/privacidade"

@@ -21,6 +21,7 @@ import {
   formatDateTime,
   formatReferenceMonth,
 } from '@/features/shared/datetime'
+import { PREVIEW_UNAVAILABLE } from '@/features/aluno/preview'
 import { isPayable, type Invoice } from '@/features/aluno/invoices'
 
 function title(i: Invoice): string {
@@ -32,7 +33,7 @@ function title(i: Invoice): string {
 
 export default function Financeiro() {
   useDocumentTitle('Financeiro')
-  const { student, timezone } = useAluno()
+  const { student, timezone, readOnly } = useAluno()
   const { data, error, loading, refetch } = useQuery(`invoices:${student.id}`, () =>
     listInvoices(student.id),
   )
@@ -40,6 +41,7 @@ export default function Financeiro() {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   async function sendNotice(id: string) {
+    if (readOnly) return
     setBusyId(id)
     setErrors((prev) => {
       const next = { ...prev }
@@ -103,14 +105,15 @@ export default function Financeiro() {
                           <Button
                             variant="outline"
                             className="w-full sm:w-auto"
-                            disabled={busyId === i.id}
+                            disabled={readOnly || busyId === i.id}
                             onClick={() => void sendNotice(i.id)}
                           >
                             {busyId === i.id ? 'Enviando…' : 'Já paguei'}
                           </Button>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            Isso apenas avisa a professora. O pagamento só é confirmado
-                            por ela.
+                            {readOnly
+                              ? PREVIEW_UNAVAILABLE
+                              : 'Isso apenas avisa a professora. O pagamento só é confirmado por ela.'}
                           </p>
                         </div>
                       )}

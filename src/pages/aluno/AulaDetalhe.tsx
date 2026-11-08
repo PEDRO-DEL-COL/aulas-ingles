@@ -29,8 +29,10 @@ function TextBlock({ title, text }: { title: string; text: string }) {
 export default function AulaDetalhe() {
   useDocumentTitle('Detalhe da aula')
   const { id = '' } = useParams()
-  const { timezone } = useAluno()
-  const { data, error, loading, refetch } = useQuery(`aula:${id}`, () => getLesson(id))
+  const { student, timezone } = useAluno()
+  const { data, error, loading, refetch } = useQuery(`aula:${student.id}:${id}`, () =>
+    getLesson(id, student.id),
+  )
 
   return (
     <div className="space-y-4">
