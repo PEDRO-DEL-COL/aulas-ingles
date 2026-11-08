@@ -118,14 +118,23 @@ Atenção (já vigente): excluir o login do último admin ativo é bloqueado pel
 | Férias com aulas já agendadas | Cancelamento automático como "cancelada pela professora", com reposição fora do limite mensal | migration 13                                                 |
 | Mensalidades em lote          | Por mês, a partir do plano de mensalidade; pacote/avulsa não geram em lote                    | migration 14, Financeiro                                     |
 
-## 11. Perguntas que restam
+## 11. Decisões da rodada 5 (para as próximas rodadas)
 
-1. **Limite de reposições:** apliquei a isenção a **toda** reposição de aula cancelada pela professora (não só por férias/feriado), porque o motivo dado foi "o cancelamento foi da professora". Se a isenção deve valer só para férias/feriados, é uma troca pequena (usar `blocked_date_id` em `makeups_counted_in_month`).
-2. **Perks dos planos na landing:** o banco não tem a lista de vantagens de cada plano (a landing mostra só nome, aulas, duração, valor e descrição). Querem um campo para isso em `plans`?
-3. **Mensalidade em lote:** a tela sugere o mês **seguinte** e vencimento no dia 10 (o último dia usado fica salvo no navegador). Preferem um dia de vencimento padrão guardado em `settings` (vale para todos os aparelhos)?
-4. **Reposição dentro de férias:** `schedule_makeup` ainda permite marcar reposição numa data bloqueada. Querem bloquear?
+Decididas pelo usuário; ainda **não implementadas**, salvo o item 1:
 
-## 12. O que ainda falta construir
+1. **Limite de reposições:** o limite de 2 por mês conta **somente** reposições de cancelamentos feitos pelo **aluno**. Já é o comportamento atual (desde a migration 13, reposição de aula cancelada pela professora, inclusive por férias/feriado, não conta) — confirmado.
+2. **Vantagens dos planos:** lista de vantagens reutilizáveis já cadastradas, com a opção de adicionar novas, associadas a cada plano e exibidas na landing (precisa de tabela/coluna nova e de entrar em `public_site_info`).
+3. **Vencimento padrão das mensalidades:** guardado em `settings` (banco, editável pelo admin), não no navegador; a tela de mensalidades em lote passa a usar esse valor como padrão.
+4. **Reposição só na disponibilidade da professora:** reposição só pode ser agendada em dias/horários em que a professora tem disponibilidade; no futuro, uma agenda virtual de disponibilidade para gerenciar isso, e `schedule_makeup` bloqueando fora da disponibilidade, inclusive em férias/feriados.
+
+## 12. "Ver como" (v0.13.0)
+
+- Só para admin real (papel no banco). Troca **apenas a visualização** (menus, rotas e telas); o papel real, a RLS e os triggers não mudam. A escolha fica no `localStorage` (`view-as:v1`) e é validada na leitura.
+- **Visão Aluno:** o admin escolhe um aluno real para pré-visualizar, **somente leitura** (cancelar aula, "Já paguei" e editar perfil ficam desabilitados). Os dados vêm da leitura que o admin já tem pela RLS; consultas que dependiam da RLS do aluno (materiais, detalhe de aula) passaram a filtrar pelo aluno escolhido. O bloqueio de escrita é só no front.
+- **Visão Professora:** é a área da professora de verdade; ações de escrita funcionam como sempre funcionaram para o admin.
+- Telas ainda inexistentes (Interessados, Meu perfil da professora, Backup e exportação) mostram "Em breve".
+
+## 13. O que ainda falta construir
 
 - Interessados (leads da landing, Fase 2) e backup/exportação (admin).
 - GitHub Actions (consulta contra a pausa e backup) e deploy no Cloudflare Pages — dependem das contas e segredos acima.
