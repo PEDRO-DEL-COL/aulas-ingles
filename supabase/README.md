@@ -18,6 +18,7 @@ SQL versionado do projeto. Nunca altere tabelas só pelo painel; crie uma nova m
 12. `20261112000001_public_site_info.sql`: RPC pública `public_site_info()` (anon e authenticated): devolve só `whatsapp_number` de `settings` e os planos ativos (campos de exibição). anon continua sem SELECT em `settings`/`plans`.
 13. `20261113000001_blocked_dates_cancel.sql`: inserir/alterar datas em `blocked_dates` cancela as aulas `agendada`/`reposicao` futuras do período (data local) como `cancelada_professora` (com reposição), com `cancel_reason` e `lessons.blocked_date_id`; reposição cuja origem foi cancelada pela professora não conta no limite mensal (`makeups_counted_in_month`, usada pelo trigger e por `makeups_used_in_month`).
 14. `20261114000001_monthly_invoices_batch.sql`: RPC `generate_monthly_invoices(p_month, p_due_day, p_dry_run)` (só staff): prévia ou geração idempotente das mensalidades do mês para alunos ativos com plano de mensalidade ativo.
+15. `20261115000001_plan_benefits_due_day.sql`: tabelas `benefits` (catálogo de vantagens, rótulo único sem diferenciar maiúsculas) e `plan_benefits` (vantagens de cada plano, com ordem); leitura por usuário ativo, escrita só admin; `public_site_info` passa a incluir `benefits` dos planos ativos; `settings.default_due_day` (1–31, só admin).
 
 As migrations 1 a 8 já foram aplicadas no projeto remoto: não edite; mudanças vão em arquivos novos com timestamp maior (`supabase migration new nome`). Todas são idempotentes.
 

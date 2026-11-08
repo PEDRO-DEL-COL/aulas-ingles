@@ -6,6 +6,18 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.14.0] - 2026-11-07
+
+### Adicionado
+
+- Vantagens dos planos: catálogo reutilizável (criar, renomear, excluir) e seleção/ordem das vantagens em cada plano, na tela Planos e valores (só admin); a landing mostra as vantagens dos planos ativos.
+- Dia de vencimento padrão das mensalidades em Políticas do negócio (`settings.default_due_day`, só admin); "Gerar mensalidades do mês" usa esse padrão (pode ser mudado só para o lote).
+- Migration `20261115000001_plan_benefits_due_day.sql` e testes pgTAP `plan_benefits.test.sql`.
+
+### Alterado
+
+- O dia de vencimento do lote deixa de ser lembrado no navegador.
+
 ## [0.13.0] - 2026-11-07
 
 ### Adicionado
