@@ -97,17 +97,21 @@ Para o backup semanal e a consulta contra a pausa do Supabase vou precisar que v
 
 ## 9. Migrations a aplicar no Supabase remoto
 
-As da rodada v0.8.0–v0.9.1 (`20261109000001_admin_area`, `20261110000001_invoices_finance`, `20261111000001_pix_txid_limit`) **já foram aplicadas**.
+Já aplicadas: todas até `20261117000001_leads_guard`.
 
-Pendentes (v0.10.0–v0.12.0), **nesta ordem** (`supabase db push` aplica em ordem):
+Pendente (v0.19.0):
 
-1. `20261112000001_public_site_info.sql` — RPC pública `public_site_info()` (só WhatsApp e planos ativos) para a landing.
-2. `20261113000001_blocked_dates_cancel.sql` — férias/feriados cancelam as aulas do período (cancelada pela professora, com reposição); `lessons.blocked_date_id`; reposição de cancelamento da professora fora do limite mensal.
-3. `20261114000001_monthly_invoices_batch.sql` — RPC `generate_monthly_invoices` (prévia e geração idempotente das mensalidades do mês).
+1. `20261118000001_availability_calendar.sql` — horário padrão com vigência (`availability_patterns`), `availability_slots.pattern_id` (faixas existentes viram um padrão sem fim), exceções por data (`availability_exceptions`), `settings.teacher_timezone` e a regra única `availability_minutes` / `is_slot_available` (reposição passa a usá-la). Usa `int4multirange`/`range_agg` (Postgres 14+).
 
-Depois de aplicar: abrir a landing e conferir no DevTools que `GET /rest/v1/rpc/public_site_info` responde 200. Testes pgTAP novos (`public_site_info`, `blocked_dates`, `monthly_invoices`) e os anteriores ainda não foram executados (sem Docker).
+Testes pgTAP (`availability_calendar` e os anteriores) ainda não foram executados (sem Docker).
 
 Atenção (já vigente): excluir o login do último admin ativo é bloqueado pelo banco; promova outro admin antes.
+
+## 9.1 Topologia do git (rodada 7)
+
+- `origin/main` está na **v0.17.0**. A **v0.18.0** (GitHub Actions + `docs/BACKUP.md`) existe só na `main` **local**, aguardando o escopo `workflow` do token (`gh auth refresh -h github.com -s workflow`).
+- A linha do calendário está na branch **`calendario`** (pública), criada a partir de `origin/main` (v0.17.0), com as tags **v0.19.0** e **v0.20.0**. Por isso o CHANGELOG dessa branch não tem a seção 0.18.0.
+- Para juntar depois: com o escopo liberado, fazer merge de `calendario` na `main` local (conflitos esperados só em `CHANGELOG.md`, `package.json`/`package-lock.json` e `docs/PENDENCIAS.md`) e dar push de `main` + tag `v0.18.0`.
 
 ## 10. Decisões da rodada 4 (respondidas)
 
@@ -134,9 +138,27 @@ Decididas pelo usuário; ainda **não implementadas**, salvo o item 1:
 - **Visão Professora:** é a área da professora de verdade; ações de escrita funcionam como sempre funcionaram para o admin.
 - Telas ainda inexistentes (Interessados, Meu perfil da professora, Backup e exportação) mostram "Em breve".
 
-## 13. O que ainda falta construir
+## 13. Calendário (v0.19.0–v0.20.0): decisões tomadas sem resposta
 
-- Interessados (leads da landing, Fase 2) e backup/exportação (admin).
-- GitHub Actions (consulta contra a pausa e backup) e deploy no Cloudflare Pages — dependem das contas e segredos acima.
+- **Uma tela só** (`/app/professora/calendario`) substitui Agenda da semana, Disponibilidade e Férias e feriados (as rotas antigas redirecionam).
+- **Padrão do assistente:** segunda a sexta, 09:00–17:00, sem intervalo pré-definido (o almoço é adicionado com "+ intervalo"), aulas de 60 min (opções 30/45/50/60/90 ou personalizada), vigência a partir de hoje sem data de fim (atalhos "o ano todo" e "até o fim do ano"). Fins de semana desmarcados por padrão.
+- **Sem padrão cadastrado** o dia inteiro conta como disponível (comportamento anterior), mostrado como "não configurado".
+- **Padrões que se sobrepõem** somam as faixas; o botão "Horário padrão" edita o primeiro padrão ativo.
+- **Feriados:** só nacionais calculados por regra; Carnaval e Corpus Christi vêm como facultativos (desmarcados). Feriados municipais/pessoais são manuais. Aplicar um feriado cria `blocked_dates` e, como já era, cancela as aulas do dia (com aviso e contagem antes).
+- **Exceções que removem horário** (fechar dia, substituir, bloquear) ou mudança do padrão: aulas afetadas aparecem antes e a professora escolhe manter, cancelar (como "cancelada pela professora", com reposição) ou desfazer. Nada é cancelado sem perguntar. Desfazer (toast de 6 s) reverte a exceção, mas não reativa aulas já canceladas.
+- **Semana:** grade 06:00–23:00 (estende se houver aula fora), linhas de 30 min, seleção com encaixe de 15 min; no celular um dia por vez; visão padrão Dia no celular e Mês no desktop.
+- **Fora do escopo:** aulas canceladas não aparecem na grade da semana (aparecem no Dia e no painel do dia); criação de exceção pela grade só com mouse/toque (pelo teclado, usar o painel do dia).
+
+## 14. O que ainda falta construir
+
+- Backup/exportação na área do admin e Meu perfil da professora; agenda virtual para o aluno ver horários livres e pedir reposição.
+- Publicar a v0.18.0 (Actions) quando o escopo `workflow` for liberado; deploy no Cloudflare Pages.
 - Validar todas as migrations e os testes pgTAP num Supabase local (`supabase start` + `supabase test db`) e testar o fluxo completo com 2 ou 3 alunos reais.
 - Regenerar `src/types/database.ts` a partir do banco (hoje escrito à mão; ver `supabase/README.md`).
+
+## 15. Perguntas em aberto
+
+1. Disponibilidade vazia: manter "dia inteiro disponível" enquanto não há horário padrão, ou bloquear tudo até haver padrão?
+2. A regra de disponibilidade deve valer também para aulas avulsas e horários fixos (hoje só reposições)?
+3. Destino do backup (repositório privado ou outro destino) e liberação do escopo `workflow`.
+4. As decisões da seção 13 (duração 60 min, 09–17 seg–sex, Carnaval/Corpus Christi facultativos) estão boas?
