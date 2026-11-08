@@ -6,7 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { Input, Label, Textarea } from '@/components/ui/field'
 import { formatDateTimeLong } from '@/features/shared/datetime'
+import { useQuery } from '@/lib/data/useQuery'
 
+import { formatRange, slotsForDate } from '../availability'
+import { checkMakeupSlot, listSlots } from '../availabilityApi'
 import { cancelLesson, scheduleMakeup, setLessonStatus } from '../api'
 import {
   canCancel,
@@ -52,6 +55,16 @@ export function LessonActionsDialog({
   const [date, setDate] = useState(() => addDaysKey(dayKey(openedAt, timezone), 1))
   const [time, setTime] = useState('14:00')
 
+  const slotsQuery = useQuery('lesson-dialog-disponibilidade', listSlots)
+  const dayHint = (() => {
+    if (!slotsQuery.data) return null
+    if (!slotsQuery.data.some((x) => x.active)) return null
+    const day = slotsForDate(date, slotsQuery.data)
+    return day.length > 0
+      ? `Disponível nesse dia: ${day.map(formatRange).join(', ')}`
+      : 'Sem disponibilidade cadastrada nesse dia'
+  })()
+
   const name = lesson.student?.full_name ?? 'Aluno'
 
   async function run(action: () => Promise<string | null>) {
@@ -84,6 +97,13 @@ export function LessonActionsDialog({
       return
     }
     void run(async () => {
+      const check = await checkMakeupSlot(utc.toISOString(), lesson.duration_minutes)
+      if (check === 'bloqueado')
+        throw new Error('Essa data cai em férias ou feriado. Escolha outro dia.')
+      if (check === 'fora_disponibilidade')
+        throw new Error(
+          'Esse horário está fora da sua disponibilidade. Escolha uma data e hora dentro das faixas cadastradas.',
+        )
       await scheduleMakeup(lesson.id, utc.toISOString())
       return 'Reposição agendada.'
     })
@@ -238,6 +258,11 @@ export function LessonActionsDialog({
               />
             </div>
           </div>
+          {dayHint ? (
+            <p className="text-sm text-muted-foreground" aria-live="polite">
+              {dayHint}
+            </p>
+          ) : null}
           <p className="text-xs text-muted-foreground">
             Horário no fuso {timezone}. O limite de reposições do mês é conferido pelo
             banco.
