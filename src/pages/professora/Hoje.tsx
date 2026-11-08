@@ -5,6 +5,8 @@ import { Greeting } from '@/components/app/Greeting'
 import { Button } from '@/components/ui/button'
 import { Card, CardDescription, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { hasActiveAvailabilityPattern } from '@/features/calendar/api'
+import { NoPatternAlert } from '@/features/calendar/components/NoPatternAlert'
 import { isActiveStatus, resolveMeetLink } from '@/features/aluno/lessons'
 import {
   countOverdueInvoices,
@@ -92,6 +94,7 @@ export default function Hoje() {
   const pending = useQuery('prof-pendentes', listPendingDecisions)
   const toSchedule = useQuery('prof-repor-agendar', () => listMakeupsToSchedule())
   const overdue = useQuery('prof-atrasadas', countOverdueInvoices)
+  const hasPattern = useQuery('prof-padrao-ativo', hasActiveAvailabilityPattern)
 
   return (
     <div className="space-y-5">
@@ -101,6 +104,8 @@ export default function Hoje() {
           {formatDayFull(now, timezone)}
         </p>
       </div>
+
+      {hasPattern.data === false ? <NoPatternAlert /> : null}
 
       <section aria-labelledby="hoje-aulas" className="space-y-3">
         <h2 id="hoje-aulas" className="text-lg font-semibold">

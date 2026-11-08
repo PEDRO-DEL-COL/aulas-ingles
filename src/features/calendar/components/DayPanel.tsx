@@ -61,6 +61,7 @@ export function DayPanel({
   onSelectLesson,
   onOpenHolidays,
   onOpenVacation,
+  onNewLesson,
 }: {
   open: boolean
   dateKey: string
@@ -73,6 +74,7 @@ export function DayPanel({
   onSelectLesson: (l: LessonWithStudent) => void
   onOpenHolidays: () => void
   onOpenVacation: (day: string) => void
+  onNewLesson: (day: string) => void
 }) {
   const [mode, setMode] = useState<Mode>('main')
   const [rows, setRows] = useState<Row[]>([])
@@ -342,7 +344,15 @@ export function DayPanel({
             ) : null}
           </section>
 
-          <div className="flex justify-end">
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              variant="outline"
+              disabled={busy}
+              onClick={() => onNewLesson(dateKey)}
+            >
+              <Plus aria-hidden="true" />
+              Nova aula neste dia
+            </Button>
             <Button variant="ghost" onClick={onClose}>
               Fechar
             </Button>

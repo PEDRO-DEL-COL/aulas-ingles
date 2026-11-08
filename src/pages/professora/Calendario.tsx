@@ -31,6 +31,8 @@ import { DayView } from '@/features/calendar/components/DayView'
 import { GenerateLessonsDialog } from '@/features/calendar/components/GenerateLessonsDialog'
 import { HolidaysPanel } from '@/features/calendar/components/HolidaysPanel'
 import { MonthView } from '@/features/calendar/components/MonthView'
+import { NewLessonDialog } from '@/features/calendar/components/NewLessonDialog'
+import { NoPatternAlert } from '@/features/calendar/components/NoPatternAlert'
 import { PatternWizard } from '@/features/calendar/components/PatternWizard'
 import { RangeMenuDialog } from '@/features/calendar/components/RangeMenuDialog'
 import { UndoToast, type ToastState } from '@/features/calendar/components/UndoToast'
@@ -39,6 +41,7 @@ import { WeekView } from '@/features/calendar/components/WeekView'
 import {
   affectedLessons,
   effectiveDay,
+  hasActivePattern,
   minuteToTime,
   type AvailabilityException,
   type EffectiveDay,
@@ -80,6 +83,7 @@ export default function Calendario() {
   const [holidaysOpen, setHolidaysOpen] = useState(params.panel === 'feriados')
   const [vacation, setVacation] = useState<{ range: DateRange | null } | null>(null)
   const [generateOpen, setGenerateOpen] = useState(false)
+  const [newLesson, setNewLesson] = useState<{ date: string } | null>(null)
   const [rangeSel, setRangeSel] = useState<{ dateKey: string; range: Range } | null>(null)
   const [pending, setPending] = useState<{
     req: DayChangeRequest
@@ -263,7 +267,12 @@ export default function Calendario() {
         onHolidays={() => setHolidaysOpen(true)}
         onVacation={() => setVacation({ range: null })}
         onGenerate={() => setGenerateOpen(true)}
+        onNewLesson={() => setNewLesson({ date })}
       />
+
+      {cal.data && !hasActivePattern(availability) ? (
+        <NoPatternAlert onDefine={() => setPatternOpen(true)} />
+      ) : null}
 
       {cal.error && cal.data ? (
         <Alert
@@ -288,21 +297,6 @@ export default function Calendario() {
         </div>
       ) : (
         <>
-          {availability.patterns.length === 0 ? (
-            <Alert
-              variant="info"
-              className="flex flex-wrap items-center justify-between gap-2"
-            >
-              <span>
-                Você ainda não definiu o horário padrão. Sem ele, todos os dias aparecem
-                como &quot;não configurado&quot;.
-              </span>
-              <Button size="sm" onClick={() => setPatternOpen(true)}>
-                Definir horário padrão
-              </Button>
-            </Alert>
-          ) : null}
-
           {view === 'mes' ? (
             <MonthView
               date={date}
@@ -354,6 +348,7 @@ export default function Calendario() {
           onSelectLesson={setSelectedLesson}
           onOpenHolidays={() => setHolidaysOpen(true)}
           onOpenVacation={(k) => setVacation({ range: { from: k, to: k } })}
+          onNewLesson={(k) => setNewLesson({ date: k })}
         />
       ) : null}
 
@@ -412,17 +407,35 @@ export default function Calendario() {
           showToast({ message: 'Período salvo.' })
         }}
       />
-      <GenerateLessonsDialog
-        open={generateOpen}
-        timezone={timezone}
-        referenceDate={date}
-        onClose={() => setGenerateOpen(false)}
-        onDone={(message) => {
-          setGenerateOpen(false)
-          cal.refetch()
-          showToast({ message })
-        }}
-      />
+      {generateOpen ? (
+        <GenerateLessonsDialog
+          open
+          timezone={timezone}
+          referenceDate={date}
+          onClose={() => setGenerateOpen(false)}
+          onDone={(message) => {
+            setGenerateOpen(false)
+            cal.refetch()
+            showToast({ message })
+          }}
+        />
+      ) : null}
+      {newLesson ? (
+        <NewLessonDialog
+          initialDate={newLesson.date}
+          timezone={timezone}
+          onClose={() => setNewLesson(null)}
+          onCreated={(message) => {
+            setNewLesson(null)
+            cal.refetch()
+            showToast({ message })
+          }}
+          onOpenDay={(k) => {
+            setNewLesson(null)
+            setDayOpen(k)
+          }}
+        />
+      ) : null}
 
       <UndoToast toast={toast} onDismiss={dismissToast} />
     </div>

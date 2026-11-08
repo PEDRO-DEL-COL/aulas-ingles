@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   PartyPopper,
+  Plus,
   Plane,
   RefreshCw,
 } from 'lucide-react'
@@ -30,6 +31,7 @@ export function CalendarToolbar({
   onHolidays,
   onVacation,
   onGenerate,
+  onNewLesson,
 }: {
   view: CalendarView
   date: string
@@ -42,6 +44,7 @@ export function CalendarToolbar({
   onHolidays: () => void
   onVacation: () => void
   onGenerate: () => void
+  onNewLesson: () => void
 }) {
   return (
     <div className="space-y-3">
@@ -122,6 +125,10 @@ export function CalendarToolbar({
       </div>
 
       <div className="flex flex-wrap gap-2">
+        <Button size="sm" onClick={onNewLesson}>
+          <Plus aria-hidden="true" />
+          Nova aula
+        </Button>
         <Button variant="secondary" size="sm" onClick={onPattern}>
           <CalendarClock aria-hidden="true" />
           Horário padrão
