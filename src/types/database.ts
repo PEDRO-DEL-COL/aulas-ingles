@@ -1,6 +1,6 @@
 /**
  * Tipos do banco, ESCRITOS À MÃO no formato de `supabase gen types typescript`,
- * espelhando supabase/migrations até 20261116000001_teacher_availability.sql.
+ * espelhando supabase/migrations até 20261117000001_leads_guard.sql.
  *
  * Por que à mão: gerar exige um Postgres com as migrations aplicadas — o projeto
  * remoto (`--linked`, só quem tem acesso ao painel deve rodar) ou um banco local
@@ -419,11 +419,7 @@ export type Database = {
         Returns: undefined
       }
       cancel_lesson: {
-        Args: {
-          p_lesson_id: string
-          p_reason?: string
-          p_by_teacher?: boolean
-        }
+        Args: { p_lesson_id: string; p_reason?: string; p_by_teacher?: boolean }
         Returns: LessonRow
       }
       generate_lessons: {
@@ -435,11 +431,7 @@ export type Database = {
         Returns: LessonRow
       }
       schedule_makeup: {
-        Args: {
-          p_original_lesson: string
-          p_starts_at: string
-          p_duration?: number
-        }
+        Args: { p_original_lesson: string; p_starts_at: string; p_duration?: number }
         Returns: LessonRow
       }
       check_makeup_slot: {

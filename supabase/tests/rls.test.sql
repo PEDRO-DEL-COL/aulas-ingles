@@ -264,7 +264,7 @@ select pg_temp.as_anon();
 select throws_ok($$select * from public.leads$$, '42501', null, 'anon nao le leads');
 select lives_ok($$insert into public.leads (name, contact, consent) values ('Visitante', 'v@test.local', true)$$,
                 'anon insere lead com consentimento');
-select throws_ok($$insert into public.leads (name, contact, consent) values ('Visitante', 'v@test.local', false)$$,
+select throws_ok($$insert into public.leads (name, contact, consent) values ('Visitante', 'v2@test.local', false)$$,
                  '42501', null, 'anon nao insere lead sem consentimento');
 select throws_ok($$insert into public.leads (name, contact, consent, status) values ('X', 'x@test.local', true, 'convertido')$$,
                  '42501', null, 'anon nao define status do lead');
