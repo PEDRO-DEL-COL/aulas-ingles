@@ -1,6 +1,6 @@
 /**
  * Tipos do banco, ESCRITOS À MÃO no formato de `supabase gen types typescript`,
- * espelhando supabase/migrations até 20261115000001_plan_benefits_due_day.sql.
+ * espelhando supabase/migrations até 20261116000001_teacher_availability.sql.
  *
  * Por que à mão: gerar exige um Postgres com as migrations aplicadas — o projeto
  * remoto (`--linked`, só quem tem acesso ao painel deve rodar) ou um banco local
@@ -220,6 +220,20 @@ type PlanBenefitRow = {
   created_at: string
 }
 
+type AvailabilitySlotRow = {
+  id: string
+  /** 0 = domingo ... 6 = sábado */
+  weekday: number
+  /** "HH:MM:SS", horário local do fuso `timezone` */
+  start_time: string
+  end_time: string
+  timezone: string
+  active: boolean
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
 type SettingsRow = {
   id: boolean
   pix_key: string | null
@@ -372,6 +386,13 @@ export type Database = {
         Update: Partial<PlanBenefitRow>
         Relationships: []
       }
+      availability_slots: {
+        Row: AvailabilitySlotRow
+        Insert: Partial<AvailabilitySlotRow> &
+          Pick<AvailabilitySlotRow, 'weekday' | 'start_time' | 'end_time'>
+        Update: Partial<AvailabilitySlotRow>
+        Relationships: []
+      }
       settings: {
         Row: SettingsRow
         Insert: Partial<SettingsRow>
@@ -420,6 +441,10 @@ export type Database = {
           p_duration?: number
         }
         Returns: LessonRow
+      }
+      check_makeup_slot: {
+        Args: { p_starts_at: string; p_duration: number }
+        Returns: 'ok' | 'bloqueado' | 'fora_disponibilidade'
       }
       public_site_info: {
         Args: Record<string, never>
