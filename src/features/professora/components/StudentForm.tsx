@@ -1,5 +1,5 @@
 import { Copy, ExternalLink } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -80,15 +80,23 @@ export function StudentForm({
   student,
   plans,
   timezone,
+  initialValues,
+  notice,
   onSaved,
 }: {
   student: StudentRecord | null
   plans: Plan[]
   timezone: string
+  /** Pré-preenchimento de uma ficha nova (ex.: vindo de um interessado). */
+  initialValues?: Partial<StudentFormValues>
+  /** Aviso mostrado no topo do formulário. */
+  notice?: ReactNode
   onSaved: (saved: StudentRecord) => void
 }) {
   const [values, setValues] = useState<StudentFormValues>(() =>
-    student ? valuesFromStudent(student, timezone) : emptyStudentValues(),
+    student
+      ? valuesFromStudent(student, timezone)
+      : { ...emptyStudentValues(), ...initialValues },
   )
   const [errors, setErrors] = useState<StudentFormErrors>({})
   const [busy, setBusy] = useState(false)
@@ -128,6 +136,11 @@ export function StudentForm({
 
   return (
     <form onSubmit={(e) => void submit(e)} noValidate className="space-y-4">
+      {notice ? (
+        <Alert>
+          <AlertDescription>{notice}</AlertDescription>
+        </Alert>
+      ) : null}
       <Card>
         <CardTitle>Dados do aluno</CardTitle>
         {student ? (

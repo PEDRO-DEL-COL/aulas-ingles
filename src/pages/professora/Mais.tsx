@@ -43,7 +43,7 @@ const entries: Entry[] = [
   {
     to: '/app/professora/interessados',
     title: 'Interessados',
-    description: 'Quem pediu informações sobre as aulas (em breve).',
+    description: 'Quem pediu uma aula experimental pela landing.',
     icon: UserPlus,
   },
   {

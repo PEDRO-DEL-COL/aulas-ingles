@@ -1,5 +1,5 @@
 import { ArrowLeft } from 'lucide-react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { getStudent, listActivePlans } from '@/features/professora/api'
@@ -8,6 +8,8 @@ import { PrivateNotesSection } from '@/features/professora/components/PrivateNot
 import { RecentLessonsSection } from '@/features/professora/components/RecentLessonsSection'
 import { SchedulesSection } from '@/features/professora/components/SchedulesSection'
 import { StudentForm } from '@/features/professora/components/StudentForm'
+import { studentPrefillFromLead } from '@/features/professora/leads'
+import { getLead, updateLeadStatus } from '@/features/professora/leadsApi'
 import { useTimezone } from '@/features/professora/useTimezone'
 import { EmptyState, ErrorState } from '@/features/shared/components/StateViews'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -27,11 +29,18 @@ export default function AlunoFicha() {
   const { id } = useParams()
   const navigate = useNavigate()
   const timezone = useTimezone()
+  const [params] = useSearchParams()
+  const leadId = id ? null : params.get('lead')
   useDocumentTitle(id ? 'Ficha do aluno' : 'Novo aluno')
 
   const plans = useQuery('prof-planos', listActivePlans)
   const student = useQuery(`prof-aluno:${id ?? 'novo'}`, async () =>
     id ? getStudent(id) : null,
+  )
+
+  // Interessado de origem (só em ficha nova). Falha ao buscar não bloqueia o cadastro.
+  const lead = useQuery(`prof-lead:${leadId ?? 'nenhum'}`, async () =>
+    leadId ? await getLead(leadId).catch(() => null) : null,
   )
 
   const error = plans.error ?? student.error
@@ -49,7 +58,7 @@ export default function AlunoFicha() {
 
       {error ? (
         <ErrorState error={error} onRetry={retry} />
-      ) : !plans.data || student.data === undefined ? (
+      ) : !plans.data || student.data === undefined || lead.data === undefined ? (
         <div role="status" className="space-y-3">
           <span className="sr-only">Carregando…</span>
           <Skeleton className="h-64 w-full rounded-xl" />
@@ -65,7 +74,17 @@ export default function AlunoFicha() {
             student={student.data}
             plans={plans.data}
             timezone={timezone}
+            initialValues={lead.data ? studentPrefillFromLead(lead.data) : undefined}
+            notice={
+              lead.data
+                ? `Dados de ${lead.data.name} preenchidos a partir do pedido de aula experimental. Falta o e-mail da conta Google do aluno: peça pelo WhatsApp e digite abaixo.`
+                : undefined
+            }
             onSaved={(saved) => {
+              if (!id && lead.data && lead.data.status !== 'convertido') {
+                // A ficha já existe; se marcar o interessado falhar, não atrapalha.
+                void updateLeadStatus(lead.data.id, 'convertido').catch(() => undefined)
+              }
               if (!id)
                 void navigate(`/app/professora/alunos/${saved.id}`, { replace: true })
               else student.refetch()
