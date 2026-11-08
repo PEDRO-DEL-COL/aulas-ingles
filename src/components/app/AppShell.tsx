@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 
+import { ViewAsBanner } from '@/components/app/ViewAsBanner'
+import { ViewAsSwitcher } from '@/components/app/ViewAsSwitcher'
 import { Button } from '@/components/ui/button'
 import { brand } from '@/config/brand'
 import { useAuth } from '@/lib/auth/useAuth'
@@ -15,15 +17,18 @@ export function AppShell({ children, nav }: { children: ReactNode; nav?: ReactNo
   return (
     <div className="flex min-h-svh flex-col bg-background text-foreground">
       <header className="border-b bg-card">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-          <span className="truncate font-semibold">{brand.name}</span>
-          <div className="flex items-center gap-3">
-            <span className="hidden max-w-[16rem] truncate text-sm text-muted-foreground sm:inline">
-              {name}
-            </span>
-            <Button variant="outline" size="sm" onClick={() => void signOut()}>
-              Sair
-            </Button>
+        <div className="mx-auto flex max-w-5xl items-start justify-between gap-3 px-4 py-3">
+          <span className="min-w-0 truncate pt-2 font-semibold">{brand.name}</span>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <div className="flex items-center gap-3">
+              <span className="hidden max-w-[16rem] truncate text-sm text-muted-foreground sm:inline">
+                {name}
+              </span>
+              <Button variant="outline" size="sm" onClick={() => void signOut()}>
+                Sair
+              </Button>
+            </div>
+            <ViewAsSwitcher />
           </div>
         </div>
         {nav ? (
@@ -35,6 +40,7 @@ export function AppShell({ children, nav }: { children: ReactNode; nav?: ReactNo
           </nav>
         ) : null}
       </header>
+      <ViewAsBanner />
       <main className="mx-auto w-full max-w-5xl flex-1 p-4 pb-24 md:pb-6">
         {children}
       </main>
