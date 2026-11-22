@@ -1,6 +1,6 @@
 /**
  * Tipos do banco, ESCRITOS À MÃO no formato de `supabase gen types typescript`,
- * espelhando supabase/migrations até 20261119000001_availability_primary_rule.sql.
+ * espelhando supabase/migrations até 20261120000001_reschedule_tracking.sql.
  *
  * Por que à mão: gerar exige um Postgres com as migrations aplicadas — o projeto
  * remoto (`--linked`, só quem tem acesso ao painel deve rodar) ou um banco local
@@ -156,6 +156,8 @@ type LessonRow = {
   makeup_decided_by: string | null
   /** Período de férias/feriado que cancelou a aula automaticamente (migration 13). */
   blocked_date_id: string | null
+  /** Horário original da ocorrência do horário fixo, se a aula foi remarcada (migration 20). */
+  original_starts_at: string | null
   created_at: string
   updated_at: string
 }

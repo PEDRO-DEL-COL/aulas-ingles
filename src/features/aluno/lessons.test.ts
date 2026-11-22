@@ -28,6 +28,7 @@ const base: Lesson = {
   makeup_eligible: null,
   makeup_decided_by: null,
   blocked_date_id: null,
+  original_starts_at: null,
   created_at: '2026-11-01T00:00:00Z',
   updated_at: '2026-11-01T00:00:00Z',
 }

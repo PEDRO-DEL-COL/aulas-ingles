@@ -73,6 +73,11 @@ const KNOWN: readonly [needle: string, message: string][] = [
     'reposicao fora da disponibilidade',
     'Esse horário está fora da disponibilidade da professora. Escolha um horário disponível.',
   ],
+  // Só aulas futuras (migration 20)
+  [
+    'aula no passado',
+    'Só é possível criar ou remarcar aulas para datas e horários futuros.',
+  ],
   // Regra primária (migration 19)
   [
     'aula fora da disponibilidade',
