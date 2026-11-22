@@ -3,7 +3,7 @@
  * `public_site_info()` do Supabase via REST puro. NÃO importa supabase-js: a landing
  * precisa continuar leve. Brand.ts/env ficam só como fallback.
  */
-import type { Plan, PlanBilling } from '@/config/brand'
+import type { Plan, PlanBilling, Testimonial } from '@/config/brand'
 import { buildWhatsAppLink } from '@/lib/whatsapp'
 
 export type PublicPlan = {
@@ -19,9 +19,53 @@ export type PublicPlan = {
   benefits: string[]
 }
 
+export type PublicTeacherProfile = {
+  displayName: string | null
+  headline: string | null
+  bio: string | null
+  education: string[]
+  experience: string[]
+  certifications: string[]
+  languages: string[]
+  photoUrl: string | null
+}
+
+export type PublicTestimonial = {
+  id: string
+  authorName: string
+  authorContext: string | null
+  body: string
+  rating: number | null
+}
+
 export type PublicSiteInfo = {
   whatsappNumber: string | null
   plans: PublicPlan[]
+  /** null = não publicado (ou vazio) */
+  teacherProfile: PublicTeacherProfile | null
+  testimonials: PublicTestimonial[]
+}
+
+export type ResolvedAbout = {
+  displayName: string
+  headline: string
+  paragraphs: string[]
+  highlights: string[]
+  education: string[]
+  experience: string[]
+  certifications: string[]
+  languages: string[]
+  photoUrl: string | null
+}
+
+export type ResolvedTestimonial = {
+  id: string
+  name: string
+  context: string | null
+  text: string
+  rating: number | null
+  /** true = exemplo de brand.ts (exibe selo) */
+  placeholder: boolean
 }
 
 export type ResolvedSiteInfo = {
@@ -31,11 +75,30 @@ export type ResolvedSiteInfo = {
   plans: Plan[]
   /** 'remote' quando os planos vieram do banco; 'fallback' quando são os de exemplo */
   plansSource: 'remote' | 'fallback'
+  about: ResolvedAbout
+  aboutSource: 'remote' | 'fallback'
+  testimonials: ResolvedTestimonial[]
+  testimonialsSource: 'remote' | 'fallback'
 }
 
-export type SiteFallback = { whatsappNumber: string; message: string; plans: Plan[] }
+export type SiteFallback = {
+  whatsappNumber: string
+  message: string
+  plans: Plan[]
+  about: {
+    teacherName: string
+    headline: string
+    paragraphs: string[]
+    highlights: string[]
+    education: string[]
+    experience: string[]
+    certifications: string[]
+    languages: string[]
+  }
+  testimonials: Testimonial[]
+}
 
-const CACHE_KEY = 'public-site-info:v1'
+const CACHE_KEY = 'public-site-info:v2'
 const TIMEOUT_MS = 4000
 const BILLING = ['mensalidade', 'pacote', 'avulsa'] as const
 
@@ -57,6 +120,64 @@ function parseBenefits(v: unknown): string[] {
     if (out.length === 12) break
   }
   return out
+}
+
+function optText(v: unknown, max: number): string | null {
+  if (typeof v !== 'string') return null
+  const t = v.trim()
+  return t.length >= 1 && t.length <= max ? t : null
+}
+
+function parseList(v: unknown): string[] {
+  if (!Array.isArray(v)) return []
+  const out: string[] = []
+  for (const item of v) {
+    if (typeof item !== 'string') continue
+    const t = item.trim()
+    if (t.length >= 1 && t.length <= 200) out.push(t)
+    if (out.length === 12) break
+  }
+  return out
+}
+
+function parseTeacherProfile(raw: unknown): PublicTeacherProfile | null {
+  if (!isRecord(raw)) return null
+  const photo = typeof raw.photo_url === 'string' ? raw.photo_url.trim() : ''
+  const profile: PublicTeacherProfile = {
+    displayName: optText(raw.display_name, 80),
+    headline: optText(raw.headline, 120),
+    bio: optText(raw.bio, 2000),
+    education: parseList(raw.education),
+    experience: parseList(raw.experience),
+    certifications: parseList(raw.certifications),
+    languages: parseList(raw.languages),
+    photoUrl: photo.startsWith('https://') && photo.length <= 500 ? photo : null,
+  }
+  const empty =
+    !profile.headline &&
+    !profile.bio &&
+    !profile.education.length &&
+    !profile.experience.length &&
+    !profile.certifications.length &&
+    !profile.languages.length
+  return empty ? null : profile
+}
+
+function parseTestimonial(raw: unknown): PublicTestimonial | null {
+  if (!isRecord(raw)) return null
+  const { id } = raw
+  if (typeof id !== 'string' || id === '') return null
+  const authorName = optText(raw.author_name, 120)
+  const body = optText(raw.body, 600)
+  if (!authorName || !body) return null
+  const r = raw.rating
+  return {
+    id,
+    authorName,
+    authorContext: optText(raw.author_context, 120),
+    body,
+    rating: typeof r === 'number' && Number.isInteger(r) && r >= 1 && r <= 5 ? r : null,
+  }
 }
 
 function parsePlan(raw: unknown): PublicPlan | null {
@@ -99,7 +220,18 @@ export function parsePublicSiteInfo(json: unknown): PublicSiteInfo | null {
   const plans = Array.isArray(json.plans)
     ? json.plans.map(parsePlan).filter((p): p is PublicPlan => p !== null)
     : []
-  return { whatsappNumber, plans }
+  const testimonials = Array.isArray(json.testimonials)
+    ? json.testimonials
+        .map(parseTestimonial)
+        .filter((t): t is PublicTestimonial => t !== null)
+        .slice(0, 24)
+    : []
+  return {
+    whatsappNumber,
+    plans,
+    teacherProfile: parseTeacherProfile(json.teacher_profile),
+    testimonials,
+  }
 }
 
 const BILLING_MAP: Record<PublicPlan['billingModel'], PlanBilling> = {
@@ -139,11 +271,61 @@ export function resolveSiteInfo(
 ): ResolvedSiteInfo {
   const number = remote?.whatsappNumber || fallback.whatsappNumber
   const hasPlans = !!remote && remote.plans.length > 0
+  const profile = remote?.teacherProfile ?? null
+  const fb = fallback.about
+  const about: ResolvedAbout = profile
+    ? {
+        displayName: profile.displayName ?? fb.teacherName,
+        headline: profile.headline ?? fb.headline,
+        paragraphs: (profile.bio ?? '')
+          .split(/\r?\n/)
+          .map((p) => p.trim())
+          .filter(Boolean),
+        highlights: fb.highlights,
+        education: profile.education,
+        experience: profile.experience,
+        certifications: profile.certifications,
+        languages: profile.languages,
+        photoUrl: profile.photoUrl,
+      }
+    : {
+        displayName: fb.teacherName,
+        headline: fb.headline,
+        paragraphs: fb.paragraphs,
+        highlights: fb.highlights,
+        education: fb.education,
+        experience: fb.experience,
+        certifications: fb.certifications,
+        languages: fb.languages,
+        photoUrl: null,
+      }
+  const hasTestimonials = !!remote && remote.testimonials.length > 0
+  const testimonials: ResolvedTestimonial[] = hasTestimonials
+    ? remote.testimonials.map((t) => ({
+        id: t.id,
+        name: t.authorName,
+        context: t.authorContext,
+        text: t.body,
+        rating: t.rating,
+        placeholder: false,
+      }))
+    : fallback.testimonials.map((t) => ({
+        id: t.id,
+        name: t.name,
+        context: t.role,
+        text: t.text,
+        rating: null,
+        placeholder: t.placeholder,
+      }))
   return {
     whatsappNumber: number,
     whatsappLink: number ? buildWhatsAppLink(number, fallback.message) : null,
     plans: hasPlans ? toLandingPlans(remote.plans) : fallback.plans,
     plansSource: hasPlans ? 'remote' : 'fallback',
+    about,
+    aboutSource: profile ? 'remote' : 'fallback',
+    testimonials,
+    testimonialsSource: hasTestimonials ? 'remote' : 'fallback',
   }
 }
 

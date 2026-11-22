@@ -37,7 +37,174 @@ const fallback: SiteFallback = {
   whatsappNumber: '5531988887777',
   message: 'Oi',
   plans: [fbPlan],
+  about: {
+    teacherName: 'Prof Fallback',
+    headline: 'Headline fb',
+    paragraphs: ['Par fb'],
+    highlights: ['H1'],
+    education: ['Edu fb'],
+    experience: [],
+    certifications: [],
+    languages: [],
+  },
+  testimonials: [
+    { id: 't1', name: 'Ex', role: 'Papel', text: 'Texto ex', placeholder: true },
+  ],
 }
+
+const tm = (over: Record<string, unknown> = {}) => ({
+  id: 't1',
+  author_name: 'Ana',
+  author_context: 'Estudante',
+  body: 'Muito bom',
+  rating: 5,
+  ...over,
+})
+
+const profile = (over: Record<string, unknown> = {}) => ({
+  display_name: 'Maria Silva',
+  headline: 'Inglês leve',
+  bio: 'Linha 1\n\nLinha 2',
+  education: ['Letras'],
+  experience: [],
+  certifications: [],
+  languages: [],
+  photo_url: 'https://x.test/a.jpg',
+  ...over,
+})
+
+describe('teacher_profile', () => {
+  it('parseia perfil válido', () => {
+    const r = parsePublicSiteInfo({ teacher_profile: profile() })!
+    expect(r.teacherProfile?.displayName).toBe('Maria Silva')
+    expect(r.teacherProfile?.photoUrl).toBe('https://x.test/a.jpg')
+    expect(r.teacherProfile?.education).toEqual(['Letras'])
+  })
+  it('foto só com https e <= 500', () => {
+    const p = (u: string) =>
+      parsePublicSiteInfo({ teacher_profile: profile({ photo_url: u }) })!.teacherProfile
+    expect(p('http://x.test/a.jpg')?.photoUrl).toBeNull()
+    expect(p('javascript:alert(1)')?.photoUrl).toBeNull()
+    expect(p('https://x.test/' + 'a'.repeat(500))?.photoUrl).toBeNull()
+  })
+  it('limites de texto e listas', () => {
+    const r = parsePublicSiteInfo({
+      teacher_profile: profile({
+        display_name: 'n'.repeat(81),
+        headline: 'h'.repeat(121),
+        bio: 'b'.repeat(2001),
+        education: [
+          '',
+          'x'.repeat(201),
+          5,
+          ...Array.from({ length: 20 }, (_, i) => `e${i}`),
+        ],
+      }),
+    })!.teacherProfile!
+    expect(r.displayName).toBeNull()
+    expect(r.headline).toBeNull()
+    expect(r.bio).toBeNull()
+    expect(r.education).toHaveLength(12)
+    expect(r.education[0]).toBe('e0')
+  })
+  it('perfil vazio, ausente ou inválido vira null', () => {
+    expect(
+      parsePublicSiteInfo({
+        teacher_profile: profile({ headline: null, bio: null, education: [] }),
+      })!.teacherProfile,
+    ).toBeNull()
+    expect(parsePublicSiteInfo({ teacher_profile: null })!.teacherProfile).toBeNull()
+    expect(parsePublicSiteInfo({ teacher_profile: 'x' })!.teacherProfile).toBeNull()
+  })
+})
+
+describe('testimonials', () => {
+  it('parseia válidos e descarta inválidos', () => {
+    const r = parsePublicSiteInfo({
+      testimonials: [
+        tm(),
+        tm({ id: '' }),
+        tm({ author_name: ' ' }),
+        tm({ body: '' }),
+        tm({ body: 'x'.repeat(601) }),
+        7,
+        tm({ id: 't2', rating: 6, author_context: null }),
+        tm({ id: 't3', rating: 3.5 }),
+        tm({ id: 't4', rating: 4 }),
+      ],
+    })!.testimonials
+    expect(r.map((t) => t.id)).toEqual(['t1', 't2', 't3', 't4'])
+    expect(r.map((t) => t.rating)).toEqual([5, null, null, 4])
+    expect(r[1]?.authorContext).toBeNull()
+  })
+  it('limita a 24', () => {
+    const many = Array.from({ length: 30 }, (_, i) => tm({ id: `t${i}` }))
+    expect(parsePublicSiteInfo({ testimonials: many })!.testimonials).toHaveLength(24)
+  })
+  it('resposta antiga sem chaves novas', () => {
+    const r = parsePublicSiteInfo({ whatsapp_number: null, plans: [] })!
+    expect(r.teacherProfile).toBeNull()
+    expect(r.testimonials).toEqual([])
+    const res = resolveSiteInfo(r, fallback)
+    expect(res.aboutSource).toBe('fallback')
+    expect(res.testimonialsSource).toBe('fallback')
+  })
+})
+
+describe('resolveSiteInfo about/testimonials', () => {
+  it('com depoimentos reais, exemplos somem', () => {
+    const r = resolveSiteInfo(parsePublicSiteInfo({ testimonials: [tm()] }), fallback)
+    expect(r.testimonialsSource).toBe('remote')
+    expect(r.testimonials).toHaveLength(1)
+    expect(r.testimonials[0]).toMatchObject({
+      name: 'Ana',
+      context: 'Estudante',
+      rating: 5,
+      placeholder: false,
+    })
+  })
+  it('sem depoimentos mostra exemplos com selo', () => {
+    const r = resolveSiteInfo(parsePublicSiteInfo({ testimonials: [] }), fallback)
+    expect(r.testimonialsSource).toBe('fallback')
+    expect(r.testimonials[0]).toMatchObject({
+      name: 'Ex',
+      context: 'Papel',
+      placeholder: true,
+    })
+  })
+  it('currículo remoto prevalece e bio vira parágrafos', () => {
+    const r = resolveSiteInfo(
+      parsePublicSiteInfo({ teacher_profile: profile() }),
+      fallback,
+    )
+    expect(r.aboutSource).toBe('remote')
+    expect(r.about.displayName).toBe('Maria Silva')
+    expect(r.about.paragraphs).toEqual(['Linha 1', 'Linha 2'])
+    expect(r.about.education).toEqual(['Letras'])
+    expect(r.about.photoUrl).toBe('https://x.test/a.jpg')
+  })
+  it('nome e headline ausentes caem para o fallback', () => {
+    const r = resolveSiteInfo(
+      parsePublicSiteInfo({
+        teacher_profile: profile({ display_name: null, headline: null }),
+      }),
+      fallback,
+    )
+    expect(r.about.displayName).toBe('Prof Fallback')
+    expect(r.about.headline).toBe('Headline fb')
+  })
+  it('currículo vazio cai para o fallback', () => {
+    const r = resolveSiteInfo(
+      parsePublicSiteInfo({
+        teacher_profile: profile({ headline: null, bio: null, education: [] }),
+      }),
+      fallback,
+    )
+    expect(r.aboutSource).toBe('fallback')
+    expect(r.about.education).toEqual(['Edu fb'])
+    expect(r.about.photoUrl).toBeNull()
+  })
+})
 
 describe('parsePublicSiteInfo', () => {
   it('aceita resposta válida', () => {

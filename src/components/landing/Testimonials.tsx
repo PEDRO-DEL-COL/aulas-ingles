@@ -1,11 +1,32 @@
-import { Quote } from 'lucide-react'
+import { Quote, Star } from 'lucide-react'
 
 import { Reveal } from '@/components/brand/Reveal'
-import { brand } from '@/config/brand'
+import { cn } from '@/lib/utils'
 
 import { SectionHeading } from './SectionHeading'
+import { usePublicSite } from './usePublicSite'
+
+function Stars({ rating }: { rating: number }) {
+  return (
+    <p className="mt-3 flex items-center gap-0.5">
+      <span className="sr-only">Nota {rating} de 5</span>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <Star
+          key={n}
+          aria-hidden="true"
+          className={cn(
+            'size-5',
+            n <= rating ? 'fill-peach-text text-peach-text' : 'text-border',
+          )}
+        />
+      ))}
+    </p>
+  )
+}
 
 export function Testimonials() {
+  const { testimonials } = usePublicSite()
+  if (testimonials.length === 0) return null
   return (
     <section
       id="depoimentos"
@@ -16,13 +37,13 @@ export function Testimonials() {
         <SectionHeading id="titulo-depoimentos" eyebrow="Depoimentos">
           Quem estuda comigo
         </SectionHeading>
-        <ul className="grid gap-6 md:grid-cols-3">
-          {brand.testimonials.map((t, i) => (
+        <ul className="flex flex-wrap justify-center gap-6">
+          {testimonials.map((t, i) => (
             <Reveal
               as="li"
               key={t.id}
-              delay={i * 90}
-              className="flex flex-col rounded-3xl bg-card p-6 shadow-sm"
+              delay={(i % 6) * 90}
+              className="flex w-full flex-col rounded-3xl bg-card p-6 shadow-sm md:w-[calc((100%-1.5rem)/2)] lg:w-[calc((100%-3rem)/3)]"
             >
               {t.placeholder ? (
                 <span className="mb-3 self-start rounded-full bg-warning-soft px-3 py-0.5 text-xs font-bold text-warning">
@@ -30,10 +51,13 @@ export function Testimonials() {
                 </span>
               ) : null}
               <Quote className="size-6 text-peach-text" aria-hidden="true" />
+              {t.rating ? <Stars rating={t.rating} /> : null}
               <blockquote className="mt-2 flex-1 text-lg">{t.text}</blockquote>
               <p className="mt-4 text-sm">
                 <strong>{t.name}</strong>
-                <span className="text-muted-foreground"> · {t.role}</span>
+                {t.context ? (
+                  <span className="block text-muted-foreground">{t.context}</span>
+                ) : null}
               </p>
             </Reveal>
           ))}

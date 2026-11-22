@@ -15,6 +15,8 @@ const fallback: SiteFallback = {
   whatsappNumber: brand.whatsapp.number,
   message: brand.whatsapp.message,
   plans: brand.plans,
+  about: { teacherName: brand.teacherName, ...brand.about },
+  testimonials: brand.testimonials,
 }
 
 // Uma única busca por carregamento da página (StrictMode/navegação não repetem).

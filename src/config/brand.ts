@@ -210,6 +210,18 @@ export const brand = {
       'Cada aluno tem um plano próprio: começamos pelo seu objetivo, conversamos bastante e usamos materiais que fazem sentido para a sua rotina.',
     ],
     highlights: ['Aulas individuais', 'Foco em conversação', 'Todos os níveis'],
+    // PLACEHOLDER: currículo de exemplo, substituir pelo real (ou preencher no painel da professora).
+    education: ['[Exemplo — substituir] Licenciatura em Letras – Inglês'],
+    experience: [
+      '[Exemplo — substituir] 5 anos de aulas particulares e em escolas de idiomas',
+    ],
+    certifications: [
+      '[Exemplo — substituir] Certificado de proficiência (ex.: Cambridge C1)',
+    ],
+    languages: [
+      '[Exemplo — substituir] Português (nativo)',
+      '[Exemplo — substituir] Inglês (fluente)',
+    ],
   },
   plans,
   testimonials,
