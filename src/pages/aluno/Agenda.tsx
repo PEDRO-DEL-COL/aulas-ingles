@@ -15,6 +15,7 @@ import {
   PageHeader,
 } from '@/features/shared/components/StateViews'
 import { PREVIEW_UNAVAILABLE } from '@/features/aluno/preview'
+import { rescheduleNoteForStudent } from '@/features/shared/reschedule'
 import { useNow } from '@/features/shared/useNow'
 import { LessonStatusBadge } from '@/features/aluno/components/StatusBadges'
 import {
@@ -89,6 +90,11 @@ export default function Agenda() {
                           {l.duration_minutes} minutos
                           {note ? ` · ${note}` : ''}
                         </p>
+                        {rescheduleNoteForStudent(l, timezone) ? (
+                          <p className="text-xs text-muted-foreground">
+                            {rescheduleNoteForStudent(l, timezone)}
+                          </p>
+                        ) : null}
                         {canStudentCancel(l, now) ? (
                           <div className="self-start">
                             <Button

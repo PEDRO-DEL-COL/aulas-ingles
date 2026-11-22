@@ -10,6 +10,7 @@ import { SlotPicker } from '@/features/calendar/components/SlotPicker'
 import { parseDuration, validateSlotChoice } from '@/features/calendar/lessonForm'
 import { useDayAvailability } from '@/features/calendar/useDayAvailability'
 import { formatDateTimeLong } from '@/features/shared/datetime'
+import { rescheduleNote } from '@/features/shared/reschedule'
 import { friendlyError } from '@/features/shared/errors'
 
 import { cancelLesson, scheduleMakeup, setLessonStatus } from '../api'
@@ -55,7 +56,8 @@ export function LessonActionsDialog({
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [reason, setReason] = useState('')
-  const [date, setDate] = useState(() => addDaysKey(dayKey(openedAt, timezone), 1))
+  const openedToday = dayKey(openedAt, timezone)
+  const [date, setDate] = useState(() => addDaysKey(openedToday, 1))
   const [time, setTime] = useState('')
   const [durationText, setDurationText] = useState<string | null>(null)
 
@@ -146,6 +148,11 @@ export function LessonActionsDialog({
           {formatDateTimeLong(lesson.starts_at, timezone)}
         </p>
         <TeacherStatusBadge status={lesson.status} />
+        {rescheduleNote(lesson, timezone) ? (
+          <p className="text-xs text-muted-foreground">
+            {rescheduleNote(lesson, timezone)}
+          </p>
+        ) : null}
       </div>
       {error ? <Alert variant="destructive">{error}</Alert> : null}
 
@@ -281,6 +288,7 @@ export function LessonActionsDialog({
             error={avail.error}
             onRetry={avail.retry}
             disabled={busy}
+            minDate={openedToday}
           />
           <p className="text-xs text-muted-foreground">
             Horário no fuso {timezone}. O limite de reposições do mês e a disponibilidade
@@ -325,12 +333,13 @@ export function LessonActionsDialog({
             error={avail.error}
             onRetry={avail.retry}
             disabled={busy}
+            minDate={openedToday}
           />
           <Alert variant="info" role="note">
             <AlertDescription>
-              Horário no fuso {timezone}. Se esta aula foi gerada por um horário fixo do
-              aluno e o mesmo período for gerado de novo, ela pode reaparecer no horário
-              original (limitação conhecida).
+              Horário no fuso {timezone}. A aula passa a ser neste novo horário; gerar as
+              aulas de novo não recria o horário antigo. Não é possível remarcar para o
+              passado.
             </AlertDescription>
           </Alert>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

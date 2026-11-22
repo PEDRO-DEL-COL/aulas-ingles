@@ -16,6 +16,7 @@ import { LessonStatusBadge } from '@/features/aluno/components/StatusBadges'
 import { MaterialItem } from '@/features/aluno/components/MaterialItem'
 import { formatDateTime, formatDateTimeLong } from '@/features/shared/datetime'
 import { makeupText } from '@/features/aluno/lessons'
+import { rescheduleNoteForStudent } from '@/features/shared/reschedule'
 
 function TextBlock({ title, text }: { title: string; text: string }) {
   return (
@@ -68,6 +69,11 @@ export default function AulaDetalhe() {
                 {makeupText(data.lesson, data.makeup, (iso) =>
                   formatDateTime(iso, timezone),
                 )}
+              </p>
+            ) : null}
+            {rescheduleNoteForStudent(data.lesson, timezone) ? (
+              <p className="text-sm text-muted-foreground">
+                {rescheduleNoteForStudent(data.lesson, timezone)}
               </p>
             ) : null}
             {data.lesson.cancel_reason &&

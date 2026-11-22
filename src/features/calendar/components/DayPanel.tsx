@@ -8,6 +8,7 @@ import { Input, Label } from '@/components/ui/field'
 import { TeacherStatusBadge } from '@/features/professora/components/TeacherStatusBadge'
 import type { LessonWithStudent } from '@/features/professora/lessons'
 import { formatTime } from '@/features/shared/datetime'
+import { rescheduleNote } from '@/features/shared/reschedule'
 import { cn } from '@/lib/utils'
 
 import {
@@ -246,6 +247,11 @@ export function DayPanel({
                       <span className="min-w-0 truncate">
                         <strong>{formatTime(l.starts_at, timezone)}</strong>{' '}
                         {l.student?.full_name ?? 'Aluno'}
+                        {rescheduleNote(l, timezone) ? (
+                          <span className="block truncate text-xs text-muted-foreground">
+                            {rescheduleNote(l, timezone)}
+                          </span>
+                        ) : null}
                       </span>
                       <TeacherStatusBadge status={l.status} />
                     </button>

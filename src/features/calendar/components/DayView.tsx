@@ -6,6 +6,7 @@ import { TeacherStatusBadge } from '@/features/professora/components/TeacherStat
 import type { LessonWithStudent } from '@/features/professora/lessons'
 import { EmptyState } from '@/features/shared/components/StateViews'
 import { formatTime } from '@/features/shared/datetime'
+import { rescheduleNote } from '@/features/shared/reschedule'
 import { cn } from '@/lib/utils'
 
 import {
@@ -113,6 +114,11 @@ export function DayView({
                       <span className="block truncate">
                         {l.student?.full_name ?? 'Aluno'}
                       </span>
+                      {rescheduleNote(l, timezone) ? (
+                        <span className="block text-xs text-muted-foreground">
+                          {rescheduleNote(l, timezone)}
+                        </span>
+                      ) : null}
                     </span>
                     <TeacherStatusBadge status={l.status} />
                   </button>
