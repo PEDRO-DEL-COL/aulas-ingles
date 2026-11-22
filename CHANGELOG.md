@@ -6,6 +6,18 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.23.0] - 2026-11-22
+
+### Adicionado
+
+- Migration `20261121000001_teacher_profile_testimonials.sql`: tabela `teacher_profile` (currículo da professora, linha única: nome de exibição, chamada, apresentação, formação, experiência, certificações, idiomas, foto opcional por URL https, publicado) e tabela `testimonials` (nome, contexto, texto, nota 1–5 opcional, publicado, ordem). RLS: só professora/admin leem e escrevem; alunos e visitantes não leem as tabelas. `public_site_info()` passa a devolver também `teacher_profile` (só quando publicado, só campos publicáveis) e `testimonials` (só os publicados, até 24, na ordem). Depoimentos nascem como rascunho (moderação). Testes pgTAP `teacher_profile_testimonials.test.sql`.
+- Landing: seção "Sobre a professora" com currículo em cartões (Formação, Experiência, Certificações, Idiomas) e foto opcional; depoimentos reais com nota em estrelas. Sem dados publicados, mostra os exemplos de `brand.ts` com selo "Exemplo — substituir"; havendo ao menos um depoimento publicado, os exemplos somem.
+- Área da professora/admin: tela **Site: sobre e depoimentos** (`/app/professora/site`, em Mais) para editar e publicar o currículo e criar, editar, ordenar, publicar/ocultar e excluir depoimentos.
+
+### Alterado
+
+- Cache da landing passa a `public-site-info:v2`.
+
 ## [0.22.1] - 2026-11-22
 
 ### Adicionado
