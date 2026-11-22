@@ -66,8 +66,8 @@ Para o backup semanal e a consulta contra a pausa do Supabase vou precisar que v
 ## 6. Conteúdo a revisar antes de divulgar
 
 - `src/config/brand.ts`: nome do negócio, nome da professora, slogan, texto "sobre", planos e preços, FAQ, redes sociais, e-mail de contato, foro.
-- Depoimentos: hoje são **exemplos** (com selo visível). Trocar por depoimentos reais com autorização dos alunos.
-- Foto da professora (hoje há um bloco com iniciais; ver `src/components/landing/About.tsx`).
+- Depoimentos e currículo: desde a v0.23.0 a professora cadastra em **Mais > Site: sobre e depoimentos**. Enquanto nada for publicado, a landing mostra os **exemplos** de `brand.ts` (com selo "Exemplo — substituir"). Só publicar depoimentos com autorização dos alunos.
+- Foto da professora: campo "URL da foto" na mesma tela (precisa ser um link **https direto para a imagem**; link de compartilhamento do Google Drive normalmente não funciona como imagem). Sem foto, aparecem as iniciais.
 - `index.html`: título e tags Open Graph estão fixos com o nome provisório.
 - **Privacidade e Termos** (`src/pages/Privacidade.tsx`): é um rascunho; precisa de revisão, idealmente por um profissional, e dos dados reais da controladora, prazo de retenção e política de cancelamento.
 
@@ -99,9 +99,10 @@ Para o backup semanal e a consulta contra a pausa do Supabase vou precisar que v
 
 Já aplicadas: todas até `20261119000001_availability_primary_rule`.
 
-Pendente (v0.22.0):
+Pendentes:
 
-1. `20261120000001_reschedule_tracking.sql` — remarcação desliga a ocorrência do horário fixo (`lessons.original_starts_at`), geração idempotente que não recria remarcadas/canceladas e só cria aulas futuras; app não cria nem remarca aula no passado.
+1. (v0.22.0) `20261120000001_reschedule_tracking.sql` — remarcação desliga a ocorrência do horário fixo (`lessons.original_starts_at`), geração idempotente que não recria remarcadas/canceladas e só cria aulas futuras; app não cria nem remarca aula no passado.
+2. (v0.23.0) `20261121000001_teacher_profile_testimonials.sql` — currículo da professora e depoimentos moderados; `public_site_info()` ganha `teacher_profile` e `testimonials`. Sem ela a tela "Site" dá erro e a landing segue mostrando os exemplos.
 
 Testes pgTAP ainda não executados (sem Docker).
 
@@ -174,6 +175,15 @@ Decididas pelo usuário; ainda **não implementadas**, salvo o item 1:
 3. **Calendário aprovado**, com a visão Mês detalhada (v0.22.1).
 4. **Licença:** repositório público com licença restritiva (README, `LICENSE`, `UNLICENSED`) — coerente.
 
-## 17. Perguntas em aberto
+## 17. Rodada 10 (landing: currículo e depoimentos)
 
-Nenhuma pendente desta rodada.
+- Currículo em tabela própria `teacher_profile` (não em `settings`, que só o admin edita): professora e admin editam. Publicação é tudo-ou-nada (interruptor "Publicar na página inicial").
+- Depoimentos sempre nascem como rascunho; só aparecem na landing depois que a professora publica. Até 24 na landing.
+- Foto por URL https (sem upload: arquivos continuam fora do Supabase).
+- Os destaques ("Aulas individuais" etc.) continuam vindo de `brand.ts`.
+
+## 18. Perguntas em aberto
+
+1. Foto da professora: serve um link https (ex.: imagem hospedada no próprio site em `public/`), ou querem upload pelo app (Supabase Storage, 1 GB grátis)?
+2. Depoimentos: guardar também a data/forma da autorização do aluno (consentimento LGPD) no cadastro do depoimento?
+3. Os destaques da seção Sobre devem passar a ser editáveis também?
