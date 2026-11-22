@@ -97,11 +97,11 @@ Para o backup semanal e a consulta contra a pausa do Supabase vou precisar que v
 
 ## 9. Migrations a aplicar no Supabase remoto
 
-Já aplicadas: todas até `20261118000001_availability_calendar`.
+Já aplicadas: todas até `20261119000001_availability_primary_rule`.
 
-Pendente (v0.21.0):
+Pendente (v0.22.0):
 
-1. `20261119000001_availability_primary_rule.sql` — disponibilidade como regra primária de todas as aulas (trigger `lessons_availability_rule`), geração recorrente que pula e relata (`generate_recurring_lessons`).
+1. `20261120000001_reschedule_tracking.sql` — remarcação desliga a ocorrência do horário fixo (`lessons.original_starts_at`), geração idempotente que não recria remarcadas/canceladas e só cria aulas futuras; app não cria nem remarca aula no passado.
 
 Testes pgTAP ainda não executados (sem Docker).
 
@@ -110,7 +110,7 @@ Atenção (já vigente): excluir o login do último admin ativo é bloqueado pel
 ## 9.1 Topologia do git
 
 - `origin/main` está na **v0.17.0**. A `main` **local** tem a **v0.18.0** (GitHub Actions + `docs/BACKUP.md`), sem push, aguardando o escopo `workflow` (`gh auth refresh -h github.com -s workflow`). Na rodada 8 o backup foi redesenhado nessa linha (envio do `.gpg` para um repositório **privado** com `BACKUP_REPO`/`BACKUP_REPO_TOKEN`, sem artefato público) e a tag local `v0.18.0` foi movida para incluir isso (nunca foi publicada).
-- A linha do calendário está na branch pública **`calendario`** (parte da v0.17.0) com as tags **v0.19.0, v0.20.0, v0.21.0 e v0.21.1**. O CHANGELOG dessa branch não tem a seção 0.18.0.
+- A linha do calendário está na branch pública **`calendario`** (parte da v0.17.0) com as tags **v0.19.0 a v0.22.1**. O CHANGELOG dessa branch não tem a seção 0.18.0.
 - Para juntar: com o escopo liberado, merge de `calendario` na `main` local (conflitos esperados em `CHANGELOG.md`, `package.json`/`package-lock.json` e `docs/PENDENCIAS.md`) e push de `main` + tag `v0.18.0`.
 
 ## 9.2 Varredura de segredos (rodada 8)
@@ -142,7 +142,7 @@ Decididas pelo usuário; ainda **não implementadas**, salvo o item 1:
 - **Visão Professora:** é a área da professora de verdade; ações de escrita funcionam como sempre funcionaram para o admin.
 - Telas ainda inexistentes (Interessados, Meu perfil da professora, Backup e exportação) mostram "Em breve".
 
-## 13. Calendário (v0.19.0–v0.20.0): decisões tomadas sem resposta
+## 13. Calendário (v0.19.0–v0.20.0): padrões **aprovados pelo usuário** (rodada 9)
 
 - **Uma tela só** (`/app/professora/calendario`) substitui Agenda da semana, Disponibilidade e Férias e feriados (as rotas antigas redirecionam).
 - **Padrão do assistente:** segunda a sexta, 09:00–17:00, sem intervalo pré-definido (o almoço é adicionado com "+ intervalo"), aulas de 60 min (opções 30/45/50/60/90 ou personalizada), vigência a partir de hoje sem data de fim (atalhos "o ano todo" e "até o fim do ano"). Fins de semana desmarcados por padrão.
@@ -167,8 +167,13 @@ Decididas pelo usuário; ainda **não implementadas**, salvo o item 1:
 3. **Licença:** repositório público só para leitura/portfólio, sem licença de reuso (`LICENSE`, Pedro Del Col, 2026).
 4. **Backup:** o `.gpg` vai para um repositório privado separado (ver `docs/BACKUP.md` na `main` local), mantendo os 12 mais recentes.
 
-## 16. Perguntas em aberto
+## 16. Decisões da rodada 9 (resolvidas)
 
-1. Remarcar uma aula gerada por horário fixo e gerar o mesmo período de novo recria a aula no horário original (limitação antiga). Querem que a remarcação "desligue" a ocorrência original?
-2. Criar aula no passado (registro retroativo) hoje não é possível pela tela; precisa?
-3. As decisões do calendário da seção 13 (60 min, 09–17 seg–sex, Carnaval/Corpus Christi facultativos) estão boas?
+1. **Remarcar desliga a ocorrência do horário fixo:** a aula passa a ter o novo horário e gerar o período de novo não recria o horário original (`lessons.original_starts_at` + geração que pula ocorrências existentes/remarcadas/canceladas). Feito em v0.22.0.
+2. **Só aulas futuras:** nenhuma tela nem RPC cria aula no passado — Nova aula, Remarcar e Reposição limitam a data a partir de hoje e validam a hora; a geração recorrente começa hoje e o banco só gera ocorrências futuras; pelo app o banco rejeita criar/remarcar para o passado. Aulas anteriores ao app não são importadas; o histórico feito no app permanece. Feito em v0.22.0.
+3. **Calendário aprovado**, com a visão Mês detalhada (v0.22.1).
+4. **Licença:** repositório público com licença restritiva (README, `LICENSE`, `UNLICENSED`) — coerente.
+
+## 17. Perguntas em aberto
+
+Nenhuma pendente desta rodada.
