@@ -57,7 +57,8 @@ select ok((select public.public_site_info()::text not like '%segredo%'), 'chave 
 select ok((select public.public_site_info()::text not like '%politica interna%'), 'politica interna nao aparece');
 select ok((select public.public_site_info()::text not like '%Mensal velho%'), 'plano inativo nao aparece');
 select is((select array_agg(k order by k) from jsonb_object_keys(public.public_site_info()) k),
-          array['plans', 'whatsapp_number'], 'so as chaves whatsapp_number e plans');
+          array['plans', 'teacher_profile', 'testimonials', 'whatsapp_number'],
+          'so as chaves whatsapp_number, plans, teacher_profile e testimonials (migration 21)');
 select throws_ok($$select * from public.settings$$, '42501', null, 'anon continua sem ler settings');
 select throws_ok($$select * from public.plans$$, '42501', null, 'anon continua sem ler plans');
 reset role;

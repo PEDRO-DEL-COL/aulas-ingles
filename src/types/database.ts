@@ -287,6 +287,34 @@ type SettingsRow = {
   updated_at: string
 }
 
+type TeacherProfileRow = {
+  id: boolean
+  display_name: string | null
+  headline: string | null
+  bio: string | null
+  education: string[]
+  experience: string[]
+  certifications: string[]
+  languages: string[]
+  photo_url: string | null
+  published: boolean
+  created_at: string
+  updated_at: string
+}
+
+type TestimonialRow = {
+  id: string
+  author_name: string
+  author_context: string | null
+  body: string
+  rating: number | null
+  published: boolean
+  position: number
+  published_at: string | null
+  created_at: string
+  updated_at: string
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -336,6 +364,18 @@ export type Database = {
         Row: StudentRow
         Insert: Partial<StudentRow> & Pick<StudentRow, 'full_name' | 'email'>
         Update: Partial<StudentRow>
+        Relationships: []
+      }
+      teacher_profile: {
+        Row: TeacherProfileRow
+        Insert: Partial<TeacherProfileRow>
+        Update: Partial<TeacherProfileRow>
+        Relationships: []
+      }
+      testimonials: {
+        Row: TestimonialRow
+        Insert: Partial<TestimonialRow> & Pick<TestimonialRow, 'author_name' | 'body'>
+        Update: Partial<TestimonialRow>
         Relationships: []
       }
       plans: {
@@ -497,6 +537,10 @@ export type Database = {
       check_makeup_slot: {
         Args: { p_starts_at: string; p_duration: number }
         Returns: 'ok' | 'bloqueado' | 'fora_disponibilidade'
+      }
+      text_items_ok: {
+        Args: { p_items: string[]; p_max_items: number; p_max_len: number }
+        Returns: boolean
       }
       public_site_info: {
         Args: Record<string, never>
