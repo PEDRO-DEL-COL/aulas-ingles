@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 import { CALENDAR_VIEWS, periodTitle, type CalendarView } from '../calendarUi'
+import { MONTH_DETAIL_MODES, type MonthDetailMode } from '../monthDetail'
 
 const PERIOD_WORD: Record<CalendarView, string> = {
   mes: 'mês',
@@ -32,7 +33,12 @@ export function CalendarToolbar({
   onVacation,
   onGenerate,
   onNewLesson,
+  monthDetail,
+  onMonthDetail,
 }: {
+  /** Controle Minimalista/Detalhada: só aparece na visão Mês. */
+  monthDetail?: MonthDetailMode
+  onMonthDetail?: (mode: MonthDetailMode) => void
   view: CalendarView
   date: string
   refreshing: boolean
@@ -110,6 +116,35 @@ export function CalendarToolbar({
             </label>
           ))}
         </fieldset>
+        {view === 'mes' && monthDetail && onMonthDetail ? (
+          <fieldset
+            role="radiogroup"
+            className="inline-flex rounded-lg border bg-muted/50 p-0.5"
+          >
+            <legend className="sr-only">Detalhe do mês</legend>
+            {MONTH_DETAIL_MODES.map((m) => (
+              <label key={m.value} className="relative">
+                <input
+                  type="radio"
+                  name="detalhe-mes"
+                  value={m.value}
+                  checked={monthDetail === m.value}
+                  onChange={() => onMonthDetail(m.value)}
+                  className="peer sr-only"
+                />
+                <span
+                  className={cn(
+                    'inline-flex h-8 cursor-pointer items-center rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors',
+                    'peer-checked:bg-card peer-checked:text-primary peer-checked:shadow-xs',
+                    'peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring/60',
+                  )}
+                >
+                  {m.label}
+                </span>
+              </label>
+            ))}
+          </fieldset>
+        ) : null}
         <label className="flex items-center gap-1.5 text-sm">
           <span className="sr-only sm:not-sr-only sm:text-muted-foreground">Ir para</span>
           <input

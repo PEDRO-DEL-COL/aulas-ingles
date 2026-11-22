@@ -47,6 +47,11 @@ import {
   type EffectiveDay,
   type Range,
 } from '@/features/calendar/engine'
+import {
+  readMonthDetailMode,
+  writeMonthDetailMode,
+  type MonthDetailMode,
+} from '@/features/calendar/monthDetail'
 import { useCalendarData } from '@/features/calendar/useCalendarData'
 import { useTimezone } from '@/features/professora/useTimezone'
 
@@ -92,6 +97,13 @@ export default function Calendario() {
   const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState<ToastState | null>(null)
   const toastId = useRef(0)
+  const [monthDetail, setMonthDetail] = useState<MonthDetailMode>(() =>
+    readMonthDetailMode(),
+  )
+  const changeMonthDetail = useCallback((mode: MonthDetailMode) => {
+    setMonthDetail(mode)
+    writeMonthDetailMode(mode)
+  }, [])
 
   // Remove ?painel= depois de aberto (só reescreve a URL; o estado já foi lido acima).
   const hasPanelParam = params.panel !== null
@@ -268,6 +280,8 @@ export default function Calendario() {
         onVacation={() => setVacation({ range: null })}
         onGenerate={() => setGenerateOpen(true)}
         onNewLesson={() => setNewLesson({ date })}
+        monthDetail={monthDetail}
+        onMonthDetail={changeMonthDetail}
       />
 
       {cal.data && !hasActivePattern(availability) ? (
@@ -301,8 +315,11 @@ export default function Calendario() {
             <MonthView
               date={date}
               todayKey={todayKey}
+              timezone={timezone}
               days={days}
               activeLessonsByDay={activeLessonsByDay}
+              detail={monthDetail}
+              onSelectLesson={setSelectedLesson}
               onOpenDay={setDayOpen}
               onFocusDate={(k) => go('mes', k, true)}
               onSelectRange={(from, to) => setVacation({ range: { from, to } })}
