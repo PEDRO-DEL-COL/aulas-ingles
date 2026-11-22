@@ -6,6 +6,17 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.22.0] - 2026-11-22
+
+### Adicionado
+
+- Migration `20261120000001_reschedule_tracking.sql`: remarcar uma aula de horário fixo guarda o horário original (`lessons.original_starts_at`) e gerar o período de novo não recria a ocorrência original nem as canceladas (geração idempotente); a geração só cria aulas futuras e, pelo app, não se cria nem se remarca aula no passado. Testes pgTAP `reschedule.test.sql`.
+- Aulas remarcadas mostram o horário original para a professora e para o aluno.
+
+### Alterado
+
+- Nova aula, Remarcar, Reposição e Gerar aulas só aceitam datas a partir de hoje (seletor de data com mínimo, validação e mensagens claras).
+
 ## [0.21.1] - 2026-11-08
 
 ### Adicionado
