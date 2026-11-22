@@ -6,6 +6,16 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e o 
 
 ## [Não publicado]
 
+## [0.22.1] - 2026-11-22
+
+### Adicionado
+
+- Visão Mês do calendário com alternância **Minimalista / Detalhada** (escolha lembrada no navegador). Na detalhada, cada dia lista até 3 aulas (horário, aluno, estado) com "+N mais"; clicar numa aula abre as ações existentes. No celular a detalhada vira uma lista por dia rolável, começando em hoje. Aulas canceladas ficam só no painel do dia.
+
+### Documentação
+
+- Decisões da rodada 9 registradas como resolvidas em `docs/PENDENCIAS.md` (remarcação, só futuro, calendário aprovado, licença coerente).
+
 ## [0.22.0] - 2026-11-22
 
 ### Adicionado
