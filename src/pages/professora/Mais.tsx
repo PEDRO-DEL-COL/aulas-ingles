@@ -2,6 +2,7 @@ import {
   ChevronRight,
   FileSpreadsheet,
   FolderOpen,
+  Globe,
   ShieldCheck,
   User,
   UserPlus,
@@ -38,6 +39,12 @@ const entries: Entry[] = [
     title: 'Interessados',
     description: 'Quem pediu uma aula experimental pela landing.',
     icon: UserPlus,
+  },
+  {
+    to: '/app/professora/site',
+    title: 'Site: sobre e depoimentos',
+    description: 'Editar o currículo e moderar os depoimentos da página inicial.',
+    icon: Globe,
   },
   {
     to: '/app/professora/perfil',

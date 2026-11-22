@@ -14,6 +14,7 @@ const Financeiro = lazy(() => import('@/pages/professora/Financeiro'))
 const Materiais = lazy(() => import('@/pages/professora/Materiais'))
 const Mais = lazy(() => import('@/pages/professora/Mais'))
 const Interessados = lazy(() => import('@/pages/professora/Interessados'))
+const SitePublico = lazy(() => import('@/pages/professora/SitePublico'))
 const Perfil = lazy(() => import('@/pages/professora/Perfil'))
 const Planilhas = lazy(() => import('@/pages/professora/Planilhas'))
 
@@ -40,6 +41,7 @@ export default function ProfessoraArea() {
           />
           <Route path="mais" element={<Mais />} />
           <Route path="interessados" element={<Interessados />} />
+          <Route path="site" element={<SitePublico />} />
           <Route path="perfil" element={<Perfil />} />
           <Route
             path="disponibilidade"

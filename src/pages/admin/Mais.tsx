@@ -1,4 +1,4 @@
-import { ChevronRight, DatabaseBackup, GraduationCap } from 'lucide-react'
+import { ChevronRight, DatabaseBackup, GraduationCap, Globe } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { Link } from 'react-router'
 
@@ -13,6 +13,12 @@ type Entry = {
 }
 
 const entries: Entry[] = [
+  {
+    to: '/app/professora/site',
+    title: 'Site: sobre e depoimentos',
+    description: 'Editar o currículo e moderar os depoimentos da página inicial.',
+    icon: Globe,
+  },
   {
     to: '/app/admin/backup',
     title: 'Backup e exportação',
