@@ -11,7 +11,9 @@ export const GENERATION_OPTIONS: readonly { value: GenerationScope; label: strin
 
 /**
  * Intervalo [from, to] (datas "AAAA-MM-DD", inclusivas) para `generate_lessons`.
- * "semana" = semana exibida (weekStartKey..+6); N semanas = de hoje até hoje + 7N - 1.
+ * "semana" = semana exibida (weekStartKey..+6), sem passado: `from` nunca é antes de hoje
+ * (se a semana toda já passou, `to < from`: não há o que gerar). N semanas = de hoje até
+ * hoje + 7N - 1.
  * O banco limita a 366 dias e pula `blocked_dates`.
  */
 export function generationRange(
@@ -19,7 +21,12 @@ export function generationRange(
   weekStartKey: string,
   todayKey: string,
 ): { from: string; to: string } {
-  if (scope === 'semana') return { from: weekStartKey, to: addDaysKey(weekStartKey, 6) }
+  if (scope === 'semana') {
+    return {
+      from: weekStartKey < todayKey ? todayKey : weekStartKey,
+      to: addDaysKey(weekStartKey, 6),
+    }
+  }
   const weeks = Number(scope)
   return { from: todayKey, to: addDaysKey(todayKey, weeks * 7 - 1) }
 }

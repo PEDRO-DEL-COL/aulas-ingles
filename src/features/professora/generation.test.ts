@@ -9,11 +9,23 @@ import {
 } from './generation'
 
 describe('generationRange', () => {
-  it('semana exibida: do início da semana até 6 dias depois', () => {
+  it('semana exibida futura: do início da semana até 6 dias depois', () => {
+    expect(generationRange('semana', '2026-11-15', '2026-11-10')).toEqual({
+      from: '2026-11-15',
+      to: '2026-11-21',
+    })
+  })
+
+  it('semana exibida em curso: começa hoje (sem passado)', () => {
     expect(generationRange('semana', '2026-11-08', '2026-11-10')).toEqual({
-      from: '2026-11-08',
+      from: '2026-11-10',
       to: '2026-11-14',
     })
+  })
+
+  it('semana toda no passado: intervalo vazio (to < from)', () => {
+    const r = generationRange('semana', '2026-11-01', '2026-11-10')
+    expect(r.to < r.from).toBe(true)
   })
 
   it('próximas 4 semanas a partir de hoje (28 dias, inclusivo)', () => {

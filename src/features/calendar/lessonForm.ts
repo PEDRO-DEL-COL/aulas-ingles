@@ -33,7 +33,7 @@ export type SlotChoice = { ok: true; startsAt: string } | { ok: false; error: st
 export const SLOT_MESSAGES = {
   invalid: 'Data ou hora inválida para o fuso configurado.',
   duration: `A duração deve ser de ${MIN_LESSON_MINUTES} a ${MAX_LESSON_MINUTES} minutos.`,
-  past: 'A aula precisa ser em uma data e hora futuras.',
+  past: 'Escolha uma data e hora futuras: não é possível criar nem remarcar aulas para o passado.',
   blocked: 'Essa data cai em férias, feriado ou dia fechado. Escolha outro dia.',
   outside:
     'Esse horário está fora da sua disponibilidade. Escolha um dos horários sugeridos ou ajuste o horário do dia.',

@@ -24,6 +24,7 @@ export function SlotPicker({
   onRetry,
   disabled,
   onOpenDay,
+  minDate,
 }: {
   idPrefix: string
   dateKey: string
@@ -39,6 +40,8 @@ export function SlotPicker({
   disabled?: boolean
   /** Atalho para ajustar o dia (abre o painel do dia). */
   onOpenDay?: (dateKey: string) => void
+  /** Primeira data permitida (hoje no fuso): aulas só no futuro. */
+  minDate?: string
 }) {
   const groupId = useId()
   const starts =
@@ -55,6 +58,7 @@ export function SlotPicker({
             id={`${idPrefix}-date`}
             type="date"
             value={dateKey}
+            min={minDate}
             disabled={disabled}
             onChange={(e) => onDateChange(e.target.value)}
           />

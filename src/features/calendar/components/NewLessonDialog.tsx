@@ -4,6 +4,7 @@ import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { Input, Label, Select } from '@/components/ui/field'
+import { dayKey } from '@/features/shared/datetime'
 import { friendlyError } from '@/features/shared/errors'
 import { useQuery } from '@/lib/data/useQuery'
 
@@ -29,7 +30,9 @@ export function NewLessonDialog({
 }) {
   const students = useQuery('cal-alunos-ativos', listActiveStudents)
   const [studentId, setStudentId] = useState('')
-  const [dateKey, setDateKey] = useState(initialDate)
+  const [today] = useState(() => dayKey(new Date(), timezone))
+  // Aulas só no futuro: um dia já passado abre em hoje.
+  const [dateKey, setDateKey] = useState(initialDate < today ? today : initialDate)
   const [time, setTime] = useState('')
   const [durationText, setDurationText] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -139,6 +142,7 @@ export function NewLessonDialog({
           error={avail.error}
           onRetry={avail.retry}
           disabled={busy}
+          minDate={today}
           onOpenDay={onOpenDay}
         />
 

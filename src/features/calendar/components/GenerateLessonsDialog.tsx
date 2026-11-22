@@ -48,6 +48,12 @@ export function GenerateLessonsDialog({
     try {
       const weekStart = weekKeys(referenceDate)[0] ?? referenceDate
       const { from, to } = generationRange(scope, weekStart, dayKey(new Date(), timezone))
+      if (to < from) {
+        setError(
+          'Essa semana já passou: aulas só são geradas a partir de hoje. Escolha as próximas semanas.',
+        )
+        return
+      }
       const report = await generateRecurringLessons(from, to)
       const message = generationReportMessage(scope, report)
       if (report.skippedTotal === 0) onDone(message)
@@ -113,8 +119,8 @@ export function GenerateLessonsDialog({
     >
       <p className="text-sm text-muted-foreground">
         Usa os horários fixos dos alunos ativos e pula o que não cabe na disponibilidade
-        (férias, feriados e horários fora do padrão). Aulas já existentes não são
-        duplicadas.
+        (férias, feriados e horários fora do padrão). Só gera aulas futuras (a partir de
+        hoje). Aulas já existentes, remarcadas ou canceladas não são recriadas.
       </p>
       {error ? <Alert variant="destructive">{error}</Alert> : null}
       <div className="space-y-1.5">
